@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { getOrCreateUser } from "@/lib/auth";
 import { getValidEbayToken, refreshEbayToken, getEbayPolicies, getEbayInventoryLocations } from "@/lib/ebay";
 import { ManualListingClient } from "./ManualListingClient";
+import { BusinessPoliciesOptInClient } from "./BusinessPoliciesOptInClient";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -97,10 +98,16 @@ export default async function NewListingPage() {
             If the dropdowns below are empty, you likely need to create business policies and/or an inventory location in your eBay account (sandbox/production).
           </p>
           {policyEligibilityError && String(policyEligibilityError).includes("not eligible for Business Policy") && (
-            <p style={{ marginTop: 12, color: "#dc3545" }}>
-              <strong>Blocked:</strong> eBay says this account is <strong>not eligible for Business Policies</strong> (error 20403).
-              Without policy IDs, eBay will not allow publishing offers via the Sell Inventory flow.
-            </p>
+            <div style={{ marginTop: 12 }}>
+              <p style={{ color: "#dc3545" }}>
+                <strong>Blocked:</strong> eBay says this account is <strong>not eligible for Business Policies</strong> (error 20403).
+                You likely need to opt into the <strong>SELLING_POLICY_MANAGEMENT</strong> program first (eBay may take up to 24 hours to process).
+              </p>
+              <p style={{ marginTop: 8, color: "#666" }}>
+                Reference: eBay Developer Support recommendation to use <code>optInToProgram</code> / <code>getOptedInPrograms</code>.
+              </p>
+              <BusinessPoliciesOptInClient />
+            </div>
           )}
           <div style={{ marginTop: 12, fontSize: 14, color: "#444" }}>
             <div><strong>Marketplace:</strong> {marketplaceId}</div>
