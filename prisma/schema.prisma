@@ -28,6 +28,11 @@ model Store {
   ebayStoreName   String?  @map("ebay_store_name")
   ebayUserId      String?  @map("ebay_user_id")
   ebayUsername    String?  @map("ebay_username")
+  marketplaceId   String?  @map("marketplace_id") // e.g., EBAY_US
+  merchantLocationKey String? @map("merchant_location_key") // inventory "warehouse" location key
+  paymentPolicyId String?  @map("payment_policy_id")
+  fulfillmentPolicyId String? @map("fulfillment_policy_id")
+  returnPolicyId  String?  @map("return_policy_id")
   ebayAccessToken String?  @map("ebay_access_token")
   ebayRefreshToken String? @map("ebay_refresh_token")
   ebayTokenExpiry DateTime? @map("ebay_token_expiry")
@@ -46,6 +51,7 @@ model Listing {
   ebayOfferId   String?  @unique @map("ebay_offer_id")
   sku           String?  @map("sku")
   ebayItemId    String?  @unique @map("ebay_item_id")
+  ebayListingId String?  @unique @map("ebay_listing_id") // returned from publish offer
   title         String
   description   String?  @db.Text
   price         Decimal? @db.Decimal(10, 2)

@@ -331,3 +331,170 @@ export async function getEbayStores(accessToken: string) {
   }
 }
 
+/**
+ * Get eBay business policies needed to publish offers.
+ * These come from the Sell Account API and are marketplace-specific.
+ */
+export async function getEbayPolicies(accessToken: string, marketplaceId: string) {
+  const qs = `?marketplace_id=${encodeURIComponent(marketplaceId)}`
+  const [payment, fulfillment, ret] = await Promise.all([
+    ebayApiRequest(`/sell/account/v1/payment_policy${qs}`, accessToken, { method: 'GET' }).catch((e) => ({
+      error: String(e?.message || e),
+    })),
+    ebayApiRequest(`/sell/account/v1/fulfillment_policy${qs}`, accessToken, { method: 'GET' }).catch((e) => ({
+      error: String(e?.message || e),
+    })),
+    ebayApiRequest(`/sell/account/v1/return_policy${qs}`, accessToken, { method: 'GET' }).catch((e) => ({
+      error: String(e?.message || e),
+    })),
+  ])
+
+  return {
+    paymentPolicies: (payment as any)?.paymentPolicies || [],
+    fulfillmentPolicies: (fulfillment as any)?.fulfillmentPolicies || [],
+    returnPolicies: (ret as any)?.returnPolicies || [],
+    raw: { payment, fulfillment, return: ret },
+  }
+}
+
+/**
+ * Inventory locations (warehouse / ship-from). Offers require merchantLocationKey.
+ */
+export async function getEbayInventoryLocations(accessToken: string) {
+  try {
+    // Inventory API - locations
+    return await ebayApiRequest('/sell/inventory/v1/location?limit=100', accessToken, { method: 'GET' })
+  } catch (error) {
+    console.error('Error fetching eBay inventory locations:', error)
+    return null
+  }
+}
+
+/**
+ * Create or replace an inventory item (identified by SKU).
+ * This is step 1 of: inventory item -> offer -> publish.
+ */
+export async function createOrReplaceInventoryItem(
+  accessToken: string,
+  sku: string,
+  payload: {
+    title: string
+    description?: string | null
+    condition?: string | null
+    imageUrls?: string[]
+    quantity: number
+  }
+) {
+  const body: any = {
+    product: {
+      title: payload.title,
+    },
+    availability: {
+      shipToLocationAvailability: {
+        quantity: payload.quantity,
+      },
+    },
+  }
+
+  if (payload.description) body.product.description = payload.description
+  if (payload.condition) body.condition = payload.condition
+  if (payload.imageUrls && payload.imageUrls.length > 0) body.product.imageUrls = payload.imageUrls
+
+  return ebayApiRequest(`/sell/inventory/v1/inventory_item/${encodeURIComponent(sku)}`, accessToken, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
+}
+
+/**
+ * Create an offer for an inventory item.
+ */
+export async function createEbayOffer(
+  accessToken: string,
+  payload: {
+    sku: string
+    marketplaceId: string
+    merchantLocationKey: string
+    categoryId: string
+    title: string
+    description?: string | null
+    priceValue: string
+    currency: string
+    quantity: number
+    paymentPolicyId: string
+    fulfillmentPolicyId: string
+    returnPolicyId: string
+  }
+) {
+  const body: any = {
+    sku: payload.sku,
+    marketplaceId: payload.marketplaceId,
+    format: 'FIXED_PRICE',
+    availableQuantity: payload.quantity,
+    categoryId: payload.categoryId,
+    merchantLocationKey: payload.merchantLocationKey,
+    listingPolicies: {
+      paymentPolicyId: payload.paymentPolicyId,
+      fulfillmentPolicyId: payload.fulfillmentPolicyId,
+      returnPolicyId: payload.returnPolicyId,
+    },
+    pricingSummary: {
+      price: {
+        value: payload.priceValue,
+        currency: payload.currency,
+      },
+    },
+    listingDescription: {
+      title: payload.title,
+    },
+  }
+
+  if (payload.description) body.listingDescription.description = payload.description
+
+  return ebayApiRequest('/sell/inventory/v1/offer', accessToken, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+}
+
+/**
+ * Publish an offer (makes the listing live).
+ * Returns listingId on success.
+ */
+export async function publishEbayOffer(accessToken: string, offerId: string) {
+  return ebayApiRequest(`/sell/inventory/v1/offer/${encodeURIComponent(offerId)}/publish`, accessToken, {
+    method: 'POST',
+  })
+}
+
+/**
+ * Update an offer's price and/or available quantity.
+ * Note: eBay may validate other required offer fields; this is a "best effort" minimal update.
+ */
+export async function updateEbayOfferPriceQuantity(
+  accessToken: string,
+  offerId: string,
+  payload: { priceValue?: string; currency?: string; quantity?: number }
+) {
+  const body: any = {}
+  if (typeof payload.quantity === 'number') body.availableQuantity = payload.quantity
+  if (payload.priceValue) {
+    body.pricingSummary = {
+      price: { value: payload.priceValue, currency: payload.currency || 'USD' },
+    }
+  }
+  return ebayApiRequest(`/sell/inventory/v1/offer/${encodeURIComponent(offerId)}`, accessToken, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
+}
+
+/**
+ * Withdraw an offer (end listing).
+ */
+export async function withdrawEbayOffer(accessToken: string, offerId: string) {
+  return ebayApiRequest(`/sell/inventory/v1/offer/${encodeURIComponent(offerId)}/withdraw`, accessToken, {
+    method: 'POST',
+  })
+}
+

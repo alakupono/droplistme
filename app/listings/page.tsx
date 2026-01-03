@@ -65,6 +65,9 @@ export default async function ListingsPage() {
           </p>
         </div>
         <div className="admin-actions">
+          <Link href="/listings/new" className="btn btn-primary" style={{ textDecoration: "none" }}>
+            Create Listing
+          </Link>
           <Link href="/profile" className="btn btn-secondary" style={{ textDecoration: "none" }}>
             Profile
           </Link>
@@ -100,7 +103,9 @@ export default async function ListingsPage() {
                   {listings.map((l) => (
                     <tr key={l.id}>
                       <td>
-                        <strong>{l.title}</strong>
+                        <Link href={`/listings/${encodeURIComponent(l.id)}`} style={{ textDecoration: "none" }}>
+                          <strong style={{ color: "#111" }}>{l.title}</strong>
+                        </Link>
                         {l.sku && <div style={{ fontSize: 12, color: "#999" }}>SKU: {l.sku}</div>}
                       </td>
                       <td>{l.status}</td>

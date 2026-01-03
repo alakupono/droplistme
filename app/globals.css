@@ -303,6 +303,26 @@ h1 {
   border-collapse: collapse;
 }
 
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.input:disabled {
+  background: #f5f5f5;
+  color: #888;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #0070f3;
+  box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.15);
+}
+
 .users-table th,
 .admin-table th {
   text-align: left;
