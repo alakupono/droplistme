@@ -24,14 +24,15 @@ function createPrismaClient() {
   }
 
   // Validate it's a valid connection string format
-  if (!connectionString.startsWith('postgresql://') && !connectionString.startsWith('postgres://')) {
+  const dbUrl = String(connectionString)
+  if (!dbUrl.startsWith('postgresql://') && !dbUrl.startsWith('postgres://')) {
     throw new Error(`DATABASE_URL must be a valid PostgreSQL connection string. Got: ${typeof connectionString}`)
   }
 
   try {
     // Pool constructor requires connectionString in an object
     // Ensure we're passing a clean string value
-    const pool = new Pool({ connectionString: String(connectionString) })
+    const pool = new Pool({ connectionString: dbUrl })
     const adapter = new PrismaNeon(pool as any)
 
     return new PrismaClient({
