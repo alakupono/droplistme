@@ -6,7 +6,7 @@ import {
   getValidEbayToken,
   refreshEbayToken,
   getEbayIdentity,
-  getEbayAccount,
+  getEbayPrivilege,
   getEbayPolicies,
   getEbayInventoryLocations,
 } from "@/lib/ebay";
@@ -50,7 +50,7 @@ export async function GET() {
 
   const [identity, account, policies, locations] = await Promise.all([
     getEbayIdentity(accessToken).catch((e) => ({ error: String(e?.message || e) })),
-    getEbayAccount(accessToken).catch((e) => ({ error: String(e?.message || e) })),
+    getEbayPrivilege(accessToken).catch((e) => ({ error: String(e?.message || e) })),
     getEbayPolicies(accessToken, marketplaceId).catch((e) => ({ error: String(e?.message || e) })),
     getEbayInventoryLocations(accessToken).catch((e) => ({ error: String(e?.message || e) })),
   ]);

@@ -90,17 +90,13 @@ export default async function ConnectCallbackPage({ searchParams }: PageProps) {
 
     // Get eBay account info and identity
     const ebayLib = await import('@/lib/ebay');
-    const [accountInfo, identityInfo] = await Promise.all([
-      ebayLib.getEbayAccount(tokenResponse.access_token).catch(() => null),
-      ebayLib.getEbayIdentity(tokenResponse.access_token).catch(() => null),
-    ]);
+    const identityInfo = await ebayLib.getEbayIdentity(tokenResponse.access_token).catch(() => null);
 
     // Determine store name + identity
-    const ebayUsername = identityInfo?.username || accountInfo?.username || null;
+    const ebayUsername = identityInfo?.username || null;
     const ebayUserId = identityInfo?.userId || null;
     const storeName =
       ebayUsername ||
-      accountInfo?.accountId ||
       "eBay Store";
 
     // Calculate token expiry

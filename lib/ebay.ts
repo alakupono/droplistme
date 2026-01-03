@@ -305,7 +305,9 @@ export async function getEbayAccount(accessToken: string) {
  * Get user's eBay identity (username, email, etc.)
  */
 export async function getEbayIdentity(accessToken: string) {
-  return ebayApiRequest('/commerce/identity/v1/user', accessToken, { method: 'GET' })
+  // Identity API getUser is documented as GET /user/ (note trailing slash).
+  // Some eBay gateways return 404 without the trailing slash.
+  return ebayApiRequest('/commerce/identity/v1/user/', accessToken, { method: 'GET' })
 }
 
 /**
@@ -313,6 +315,14 @@ export async function getEbayIdentity(accessToken: string) {
  */
 export async function getEbayStores(accessToken: string) {
   return ebayApiRequest('/sell/account/v1/store', accessToken, { method: 'GET' })
+}
+
+/**
+ * Get seller privileges/registration status (Account API).
+ * Useful for debugging seller eligibility and account setup.
+ */
+export async function getEbayPrivilege(accessToken: string) {
+  return ebayApiRequest('/sell/account/v1/privilege', accessToken, { method: 'GET' })
 }
 
 /**
