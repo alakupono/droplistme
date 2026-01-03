@@ -50,26 +50,45 @@ export async function GET(request: NextRequest) {
     }
 
     // Get the full endpoint URL (eBay expects the exact URL used in dashboard)
-    // Important: Must match exactly what's configured in eBay Dashboard
-    // Use the request URL but remove query parameters to get the base endpoint
+    // Important: Must match EXACTLY what's configured in eBay Dashboard
+    // According to eBay docs: "the endpoint URL should use the 'https' protocol"
+    // Remove query parameters and ensure no trailing slash
     const requestUrl = new URL(request.url);
-    const endpoint = `${requestUrl.protocol}//${requestUrl.host}${requestUrl.pathname}`;
+    let endpoint = `${requestUrl.protocol}//${requestUrl.host}${requestUrl.pathname}`;
     
-    // Log for debugging
-    console.log('Endpoint URL for hash:', endpoint);
+    // Remove trailing slash if present (eBay is strict about exact match)
+    endpoint = endpoint.replace(/\/$/, '');
+    
+    // Log for debugging - this should match exactly what's in eBay Dashboard
+    console.log('eBay Challenge - Endpoint URL for hash:', endpoint);
+    console.log('eBay Challenge - Verification token length:', verificationToken.length);
+    console.log('eBay Challenge - Challenge code:', challengeCode);
 
     // Compute SHA-256 hash: challengeCode + verificationToken + endpoint
-    // Order is critical: challengeCode first, then verificationToken, then endpoint
+    // Order is CRITICAL: challengeCode first, then verificationToken, then endpoint
+    // According to eBay docs, all must be strings and concatenated in this exact order
     const hash = createHash('sha256');
-    hash.update(challengeCode);
-    hash.update(verificationToken);
-    hash.update(endpoint);
+    
+    // Ensure all are strings (they should be, but be explicit)
+    const challengeCodeStr = String(challengeCode);
+    const verificationTokenStr = String(verificationToken);
+    const endpointStr = String(endpoint);
+    
+    // Update hash in exact order specified by eBay
+    hash.update(challengeCodeStr, 'utf8');
+    hash.update(verificationTokenStr, 'utf8');
+    hash.update(endpointStr, 'utf8');
+    
     const challengeResponse = hash.digest('hex');
 
+    // Log full details for debugging (be careful not to log full token in production)
     console.log('eBay Challenge Verification:', {
       challengeCode: challengeCode.substring(0, 10) + '...',
-      endpoint,
-      responseHash: challengeResponse.substring(0, 20) + '...',
+      endpoint: endpoint,
+      verificationTokenLength: verificationToken.length,
+      verificationTokenPrefix: verificationToken.substring(0, 10) + '...',
+      responseHash: challengeResponse,
+      responseHashLength: challengeResponse.length,
     });
 
     // Return challengeResponse in JSON format
