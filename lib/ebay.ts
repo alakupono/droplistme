@@ -138,7 +138,14 @@ export async function exchangeEbayCode(
 
   if (!response.ok) {
     const error = await response.text()
-    throw new Error(`Failed to exchange code for token: ${error}`)
+    const env = process.env.EBAY_ENVIRONMENT || 'sandbox(default)'
+    const clientIdPreview = `${clientId.slice(0, 12)}…${clientId.slice(-6)}`
+    const secretLen = clientSecret.length
+    throw new Error(
+      `Failed to exchange code for token: ${error}\n` +
+        `Debug: EBAY_ENVIRONMENT=${env}, tokenUrl=${config.tokenUrl}, ` +
+        `clientId=${clientIdPreview}, clientSecretLen=${secretLen}, redirect_uri=${redirectUri}`
+    )
   }
 
   return await response.json()
