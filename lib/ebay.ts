@@ -291,7 +291,16 @@ export async function ebayApiRequest(
     )
   }
 
-  return await response.json()
+  // Some eBay endpoints return 204 No Content, or 200/201 with an empty body.
+  if (response.status === 204) return null
+  const text = await response.text().catch(() => '')
+  if (!text) return null
+  try {
+    return JSON.parse(text)
+  } catch {
+    // If eBay returns a non-JSON success payload, surface raw text.
+    return { raw: text }
+  }
 }
 
 /**
