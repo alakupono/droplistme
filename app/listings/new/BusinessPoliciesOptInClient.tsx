@@ -14,8 +14,15 @@ export function BusinessPoliciesOptInClient() {
     setIsWorking(true);
     try {
       const res = await fetch("/api/ebay/business-policies/status", { method: "GET" });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json?.error || `Status failed (${res.status})`);
+      const text = await res.text();
+      const json = (() => {
+        try {
+          return JSON.parse(text);
+        } catch {
+          return null;
+        }
+      })();
+      if (!res.ok) throw new Error((json as any)?.error || text || `Status failed (${res.status})`);
       setStatus(json);
       if (json?.hasBusinessPolicies) setOkMsg("Business Policies are enabled.");
     } catch (e: any) {
@@ -31,9 +38,16 @@ export function BusinessPoliciesOptInClient() {
     setIsWorking(true);
     try {
       const res = await fetch("/api/ebay/business-policies/opt-in", { method: "POST" });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json?.error || `Opt-in failed (${res.status})`);
-      setOkMsg(json?.message || "Opt-in requested.");
+      const text = await res.text();
+      const json = (() => {
+        try {
+          return JSON.parse(text);
+        } catch {
+          return null;
+        }
+      })();
+      if (!res.ok) throw new Error((json as any)?.error || text || `Opt-in failed (${res.status})`);
+      setOkMsg((json as any)?.message || "Opt-in requested.");
       await refreshStatus();
     } catch (e: any) {
       setError(e?.message || "Opt-in failed");
