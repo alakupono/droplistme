@@ -37,10 +37,15 @@ export async function getOrCreateUser() {
       } catch (createError: any) {
         // If create fails (e.g., race condition), try to fetch again
         console.error('Error creating user, trying to fetch:', createError);
-        user = await db.user.findUnique({
-          where: { clerkUserId: userId },
-          include: { stores: true },
-        });
+        try {
+          user = await db.user.findUnique({
+            where: { clerkUserId: userId },
+            include: { stores: true },
+          });
+        } catch (fetchError) {
+          console.error('Error fetching user after create failure:', fetchError);
+          throw createError;
+        }
         
         if (!user) {
           console.error('Failed to create or fetch user after error:', createError);
@@ -57,7 +62,11 @@ export async function getOrCreateUser() {
     if (error instanceof Error) {
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
+      console.error('Error name:', error.name);
     }
+    // Log environment info for debugging
+    console.error('DATABASE_URL exists:', !!process.env.DATABASE_URL);
+    console.error('DATABASE_URL type:', typeof process.env.DATABASE_URL);
     // Return null so caller can handle gracefully
     return null;
   }
