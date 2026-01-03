@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  clerkUserId  String   @unique @map("clerk_user_id")
+  email        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  stores Store[]
+  
+  @@map("users")
+}
+
+model Store {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  ebayStoreName   String?  @map("ebay_store_name")
+  ebayAccessToken String?  @map("ebay_access_token")
+  ebayRefreshToken String? @map("ebay_refresh_token")
+  ebayTokenExpiry DateTime? @map("ebay_token_expiry")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listings Listing[]
+  
+  @@map("stores")
+}
+
+model Listing {
+  id            String   @id @default(uuid())
+  storeId       String   @map("store_id")
+  ebayItemId    String?  @unique @map("ebay_item_id")
+  title         String
+  description   String?  @db.Text
+  price         Decimal? @db.Decimal(10, 2)
+  quantity      Int      @default(1)
+  status        String   @default("draft") // draft, active, sold, ended
+  categoryId    String?  @map("category_id")
+  condition     String?
+  images        String[] // Array of image URLs
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  listedAt      DateTime? @map("listed_at") // When actually listed on eBay
+  
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  
+  @@map("listings")
+}
