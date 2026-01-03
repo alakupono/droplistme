@@ -1,6 +1,11 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaNeon } from '@prisma/adapter-neon'
 import { Pool } from '@neondatabase/serverless'
+import { config } from 'dotenv'
+
+// Load environment variables from .env.local first, then .env
+config({ path: '.env.local' })
+config()
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined

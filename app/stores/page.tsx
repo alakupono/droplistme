@@ -82,46 +82,101 @@ export default async function StoresPage() {
               </Link>
             </div>
           ) : (
-            <div className="stores-grid">
-              {stores.map((store) => (
-                <div key={store.id} className="store-card">
-                  <div className="store-card-header">
-                    <h3>{store.ebayStoreName || "Unnamed Store"}</h3>
-                    <span className={`store-status ${store.ebayAccessToken ? "connected" : "disconnected"}`}>
-                      {store.ebayAccessToken ? "Connected" : "Not Connected"}
-                    </span>
-                  </div>
-                  <div className="store-card-body">
-                    <div className="store-stat">
-                      <span className="store-stat-label">Listings</span>
-                      <span className="store-stat-value">{store._count.listings}</span>
-                    </div>
-                    <div className="store-stat">
-                      <span className="store-stat-label">Created</span>
-                      <span className="store-stat-value">
-                        {new Date(store.createdAt).toLocaleDateString()}
+            <>
+              {/* Table View */}
+              <div className="admin-card" style={{ marginBottom: '24px' }}>
+                <h2>All Stores</h2>
+                <div className="admin-table-container">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Store Name</th>
+                        <th>Status</th>
+                        <th>Listings</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stores.map((store) => (
+                        <tr key={store.id}>
+                          <td>
+                            <strong>{store.ebayStoreName || "Unnamed Store"}</strong>
+                          </td>
+                          <td>
+                            <span className={`store-status ${store.ebayAccessToken ? "connected" : "disconnected"}`}>
+                              {store.ebayAccessToken ? "Connected" : "Not Connected"}
+                            </span>
+                          </td>
+                          <td>{store._count.listings}</td>
+                          <td>{new Date(store.createdAt).toLocaleDateString()}</td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              {store.ebayAccessToken ? (
+                                <>
+                                  <Link href={`/stores/${store.id}/listings`} className="btn btn-primary" style={{ fontSize: '12px', padding: '6px 12px' }}>
+                                    Listings
+                                  </Link>
+                                  <Link href={`/stores/${store.id}`} className="btn btn-secondary" style={{ fontSize: '12px', padding: '6px 12px' }}>
+                                    Settings
+                                  </Link>
+                                </>
+                              ) : (
+                                <Link href={`/stores/${store.id}/connect`} className="btn btn-primary" style={{ fontSize: '12px', padding: '6px 12px' }}>
+                                  Connect
+                                </Link>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Grid View (Alternative) */}
+              <div className="stores-grid">
+                {stores.map((store) => (
+                  <div key={store.id} className="store-card">
+                    <div className="store-card-header">
+                      <h3>{store.ebayStoreName || "Unnamed Store"}</h3>
+                      <span className={`store-status ${store.ebayAccessToken ? "connected" : "disconnected"}`}>
+                        {store.ebayAccessToken ? "Connected" : "Not Connected"}
                       </span>
                     </div>
-                  </div>
-                  <div className="store-card-actions">
-                    {store.ebayAccessToken ? (
-                      <>
-                        <Link href={`/stores/${store.id}/listings`} className="btn btn-primary">
-                          Manage Listings
+                    <div className="store-card-body">
+                      <div className="store-stat">
+                        <span className="store-stat-label">Listings</span>
+                        <span className="store-stat-value">{store._count.listings}</span>
+                      </div>
+                      <div className="store-stat">
+                        <span className="store-stat-label">Created</span>
+                        <span className="store-stat-value">
+                          {new Date(store.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="store-card-actions">
+                      {store.ebayAccessToken ? (
+                        <>
+                          <Link href={`/stores/${store.id}/listings`} className="btn btn-primary">
+                            Manage Listings
+                          </Link>
+                          <Link href={`/stores/${store.id}`} className="btn btn-secondary">
+                            Settings
+                          </Link>
+                        </>
+                      ) : (
+                        <Link href={`/stores/${store.id}/connect`} className="btn btn-primary" style={{ width: '100%' }}>
+                          Connect to eBay
                         </Link>
-                        <Link href={`/stores/${store.id}`} className="btn btn-secondary">
-                          Settings
-                        </Link>
-                      </>
-                    ) : (
-                      <Link href={`/stores/${store.id}/connect`} className="btn btn-primary" style={{ width: '100%' }}>
-                        Connect to eBay
-                      </Link>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>

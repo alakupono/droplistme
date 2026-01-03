@@ -292,16 +292,19 @@ h1 {
   color: #155724;
 }
 
-.users-table {
+.users-table,
+.admin-table-container {
   overflow-x: auto;
 }
 
-.users-table table {
+.users-table table,
+.admin-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.users-table th {
+.users-table th,
+.admin-table th {
   text-align: left;
   padding: 12px;
   background: #f8f9fa;
@@ -310,13 +313,15 @@ h1 {
   border-bottom: 2px solid #e9ecef;
 }
 
-.users-table td {
+.users-table td,
+.admin-table td {
   padding: 12px;
   border-bottom: 1px solid #e9ecef;
   color: #666;
 }
 
-.users-table tr:hover {
+.users-table tr:hover,
+.admin-table tr:hover {
   background: #f8f9fa;
 }
 
