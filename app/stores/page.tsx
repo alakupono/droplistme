@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
+export const runtime = "nodejs";
 
 export default async function StoresPage() {
   const { userId } = await auth();
@@ -41,6 +42,12 @@ export default async function StoresPage() {
           <p>
             We couldn’t load your dashboard. This is usually a database or environment-variable issue.
           </p>
+          {process.env.NODE_ENV === "production" && (
+            <p style={{ marginTop: 8, fontSize: 14, color: "#666" }}>
+              Most common cause: your production database is missing tables. Ensure Vercel runs Prisma migrations
+              (we now run <code>prisma migrate deploy</code> during builds).
+            </p>
+          )}
           <div style={{ marginTop: 16, padding: 16, background: "#f8f9fa", borderRadius: 8, fontSize: 14, color: "#666" }}>
             <p><strong>Debug info</strong></p>
             <p>Clerk userId: {userId}</p>
