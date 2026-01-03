@@ -18,6 +18,14 @@ export async function getOrCreateUser() {
   }
 
   try {
+    // Test database connection first
+    try {
+      await db.$connect();
+    } catch (connectError) {
+      console.error('Database connection failed:', connectError);
+      throw new Error(`Database connection failed: ${connectError instanceof Error ? connectError.message : 'Unknown error'}`);
+    }
+
     // Check if user exists in database
     let user = await db.user.findUnique({
       where: { clerkUserId: userId },

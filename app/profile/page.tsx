@@ -25,18 +25,42 @@ export default async function ProfilePage() {
     // If user creation fails, show error instead of redirecting
     if (!user) {
       console.error('Failed to get or create user for:', userId);
+      const hasDbUrl = !!process.env.DATABASE_URL;
+      const dbUrlPreview = process.env.DATABASE_URL 
+        ? `${process.env.DATABASE_URL.substring(0, 30)}...` 
+        : 'NOT SET';
+      
       return (
         <div className="profile-container">
           <div className="profile-card">
             <h1>Error Loading Profile</h1>
             <p>Unable to load your profile. This might be a temporary database issue.</p>
-            <p style={{ fontSize: '14px', color: '#666', marginTop: '12px' }}>
-              User ID: {userId}
-            </p>
+            <div style={{ 
+              marginTop: '20px', 
+              padding: '16px', 
+              background: '#f8f9fa', 
+              borderRadius: '8px',
+              fontSize: '14px',
+              color: '#666'
+            }}>
+              <p><strong>Debug Information:</strong></p>
+              <p>User ID: {userId}</p>
+              <p>Database URL: {hasDbUrl ? 'Set' : 'NOT SET'}</p>
+              {hasDbUrl && <p>DB URL Preview: {dbUrlPreview}</p>}
+              <p>Environment: {process.env.NODE_ENV || 'unknown'}</p>
+            </div>
             <div style={{ marginTop: '20px' }}>
               <Link href="/" className="btn btn-primary">
                 Go Home
               </Link>
+            </div>
+            <div style={{ marginTop: '12px', fontSize: '12px', color: '#999' }}>
+              <p>If this persists, please check:</p>
+              <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
+                <li>DATABASE_URL is set in Vercel environment variables</li>
+                <li>Database connection string is correct</li>
+                <li>Database is accessible from Vercel</li>
+              </ul>
             </div>
           </div>
         </div>
