@@ -6,21 +6,31 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-const connectionString = process.env.DATABASE_URL!
+function createPrismaClient() {
+  const connectionString = process.env.DATABASE_URL
 
-if (!connectionString) {
-  throw new Error('DATABASE_URL is not set')
+  if (!connectionString) {
+    throw new Error('DATABASE_URL is not set')
+  }
+
+  try {
+    const pool = new Pool({ connectionString })
+    const adapter = new PrismaNeon(pool as any)
+
+    return new PrismaClient({
+      adapter,
+      log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    })
+  } catch (error) {
+    console.error('Failed to create Prisma client:', error)
+    throw error
+  }
 }
 
-const pool = new Pool({ connectionString })
-const adapter = new PrismaNeon(pool as any)
-
 export const db =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    adapter,
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  })
+  globalForPrisma.prisma ?? createPrismaClient()
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = db
+}
 

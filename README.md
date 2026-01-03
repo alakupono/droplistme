@@ -35,3 +35,25 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - ✅ User authentication with Clerk
 - ✅ Sign up and sign in buttons on homepage
 - ✅ Secure user management
+
+## Vercel Deployment
+
+### Required Environment Variables
+
+Make sure to set these in your Vercel project settings:
+
+1. **Clerk Keys:**
+   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` - Your Clerk publishable key
+   - `CLERK_SECRET_KEY` - Your Clerk secret key
+
+2. **Database:**
+   - `DATABASE_URL` - Your Neon database connection string
+
+### Setting Environment Variables in Vercel
+
+1. Go to your Vercel project dashboard
+2. Navigate to **Settings** → **Environment Variables**
+3. Add each variable with the appropriate value
+4. Redeploy your application
+
+**Important:** Use your **production** database URL for the `DATABASE_URL` variable in Vercel.
