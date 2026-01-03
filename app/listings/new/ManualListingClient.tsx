@@ -148,50 +148,87 @@ export function ManualListingClient(props: {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
           <label>
             <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>Warehouse (merchantLocationKey) *</div>
-            <select className="input" value={merchantLocationKey} onChange={(e) => setMerchantLocationKey(e.target.value)}>
-              <option value="">Select a location…</option>
-              {props.locations.map((l: Location, idx: number) => (
-                <option key={`${l.merchantLocationKey || idx}`} value={l.merchantLocationKey || ""}>
-                  {l.merchantLocationKey || "Unknown"}{l.name ? ` — ${l.name}` : ""}
-                </option>
-              ))}
-            </select>
+            {props.locations.length > 0 ? (
+              <select className="input" value={merchantLocationKey} onChange={(e) => setMerchantLocationKey(e.target.value)}>
+                <option value="">Select a location…</option>
+                {props.locations.map((l: Location, idx: number) => (
+                  <option key={`${l.merchantLocationKey || idx}`} value={l.merchantLocationKey || ""}>
+                    {l.merchantLocationKey || "Unknown"}
+                    {l.name ? ` — ${l.name}` : ""}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                className="input"
+                value={merchantLocationKey}
+                onChange={(e) => setMerchantLocationKey(e.target.value)}
+                placeholder="e.g. DLME_WAREHOUSE_US"
+              />
+            )}
           </label>
 
           <label>
             <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>Payment Policy *</div>
-            <select className="input" value={paymentPolicyId} onChange={(e) => setPaymentPolicyId(e.target.value)}>
-              <option value="">Select…</option>
-              {props.paymentPolicies.map((p: any, idx: number) => (
-                <option key={p.paymentPolicyId || idx} value={p.paymentPolicyId || ""}>
-                  {p.name || p.paymentPolicyId}
-                </option>
-              ))}
-            </select>
+            {props.paymentPolicies.length > 0 ? (
+              <select className="input" value={paymentPolicyId} onChange={(e) => setPaymentPolicyId(e.target.value)}>
+                <option value="">Select…</option>
+                {props.paymentPolicies.map((p: any, idx: number) => (
+                  <option key={p.paymentPolicyId || idx} value={p.paymentPolicyId || ""}>
+                    {p.name || p.paymentPolicyId}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                className="input"
+                value={paymentPolicyId}
+                onChange={(e) => setPaymentPolicyId(e.target.value)}
+                placeholder="Paste paymentPolicyId"
+              />
+            )}
           </label>
 
           <label>
             <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>Fulfillment Policy *</div>
-            <select className="input" value={fulfillmentPolicyId} onChange={(e) => setFulfillmentPolicyId(e.target.value)}>
-              <option value="">Select…</option>
-              {props.fulfillmentPolicies.map((p: any, idx: number) => (
-                <option key={p.fulfillmentPolicyId || idx} value={p.fulfillmentPolicyId || ""}>
-                  {p.name || p.fulfillmentPolicyId}
-                </option>
-              ))}
-            </select>
+            {props.fulfillmentPolicies.length > 0 ? (
+              <select className="input" value={fulfillmentPolicyId} onChange={(e) => setFulfillmentPolicyId(e.target.value)}>
+                <option value="">Select…</option>
+                {props.fulfillmentPolicies.map((p: any, idx: number) => (
+                  <option key={p.fulfillmentPolicyId || idx} value={p.fulfillmentPolicyId || ""}>
+                    {p.name || p.fulfillmentPolicyId}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                className="input"
+                value={fulfillmentPolicyId}
+                onChange={(e) => setFulfillmentPolicyId(e.target.value)}
+                placeholder="Paste fulfillmentPolicyId"
+              />
+            )}
           </label>
 
           <label>
             <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>Return Policy *</div>
-            <select className="input" value={returnPolicyId} onChange={(e) => setReturnPolicyId(e.target.value)}>
-              <option value="">Select…</option>
-              {props.returnPolicies.map((p: any, idx: number) => (
-                <option key={p.returnPolicyId || idx} value={p.returnPolicyId || ""}>
-                  {p.name || p.returnPolicyId}
-                </option>
-              ))}
-            </select>
+            {props.returnPolicies.length > 0 ? (
+              <select className="input" value={returnPolicyId} onChange={(e) => setReturnPolicyId(e.target.value)}>
+                <option value="">Select…</option>
+                {props.returnPolicies.map((p: any, idx: number) => (
+                  <option key={p.returnPolicyId || idx} value={p.returnPolicyId || ""}>
+                    {p.name || p.returnPolicyId}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                className="input"
+                value={returnPolicyId}
+                onChange={(e) => setReturnPolicyId(e.target.value)}
+                placeholder="Paste returnPolicyId"
+              />
+            )}
           </label>
         </div>
 
