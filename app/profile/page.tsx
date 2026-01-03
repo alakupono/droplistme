@@ -20,10 +20,27 @@ export default async function ProfilePage() {
       redirect("/");
     }
 
-    const user = await getOrCreateUser();
+    let user = await getOrCreateUser();
 
+    // If user creation fails, show error instead of redirecting
     if (!user) {
-      redirect("/");
+      console.error('Failed to get or create user for:', userId);
+      return (
+        <div className="profile-container">
+          <div className="profile-card">
+            <h1>Error Loading Profile</h1>
+            <p>Unable to load your profile. This might be a temporary database issue.</p>
+            <p style={{ fontSize: '14px', color: '#666', marginTop: '12px' }}>
+              User ID: {userId}
+            </p>
+            <div style={{ marginTop: '20px' }}>
+              <Link href="/" className="btn btn-primary">
+                Go Home
+              </Link>
+            </div>
+          </div>
+        </div>
+      );
     }
 
     // Get user stats

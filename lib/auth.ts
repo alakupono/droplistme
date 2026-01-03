@@ -5,19 +5,19 @@ import { db } from "./db";
  * Get or create user in database from Clerk
  */
 export async function getOrCreateUser() {
+  const { userId } = await auth();
+  
+  if (!userId) {
+    return null;
+  }
+
+  const clerkUser = await currentUser();
+  
+  if (!clerkUser) {
+    return null;
+  }
+
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return null;
-    }
-
-    const clerkUser = await currentUser();
-    
-    if (!clerkUser) {
-      return null;
-    }
-
     // Check if user exists in database
     let user = await db.user.findUnique({
       where: { clerkUserId: userId },
@@ -43,6 +43,8 @@ export async function getOrCreateUser() {
         });
         
         if (!user) {
+          console.error('Failed to create or fetch user after error:', createError);
+          // Re-throw to be handled by caller
           throw createError;
         }
       }
@@ -51,6 +53,12 @@ export async function getOrCreateUser() {
     return user;
   } catch (error) {
     console.error('Error in getOrCreateUser:', error);
+    // Log the full error for debugging
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    // Return null so caller can handle gracefully
     return null;
   }
 }
