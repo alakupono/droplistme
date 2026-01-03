@@ -25,7 +25,6 @@ export default async function ProfilePage() {
       _count: {
         select: {
           stores: true,
-          listings: true,
         },
       },
       stores: {
@@ -93,7 +92,12 @@ export default async function ProfilePage() {
           </div>
           <div className="stat-card">
             <h3>Listings</h3>
-            <p className="stat-number">{stats?._count.listings || 0}</p>
+            <p className="stat-number">
+              {stats?.stores.reduce(
+                (sum, store) => sum + store._count.listings,
+                0
+              ) || 0}
+            </p>
           </div>
         </div>
 

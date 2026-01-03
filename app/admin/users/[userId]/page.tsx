@@ -7,11 +7,11 @@ import Link from "next/link";
 export default async function UserDetailPage({
   params,
 }: {
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 }) {
-  const { userId } = await auth();
+  const { userId: currentUserId } = await auth();
   
-  if (!userId) {
+  if (!currentUserId) {
     redirect("/");
   }
 
@@ -20,8 +20,10 @@ export default async function UserDetailPage({
     redirect("/");
   }
 
+  const { userId } = await params;
+
   const user = await db.user.findUnique({
-    where: { id: params.userId },
+    where: { id: userId },
     include: {
       stores: {
         include: {
@@ -33,7 +35,6 @@ export default async function UserDetailPage({
       _count: {
         select: {
           stores: true,
-          listings: true,
         },
       },
     },
@@ -101,7 +102,12 @@ export default async function UserDetailPage({
             </div>
             <div className="stat-card">
               <h3>Listings</h3>
-              <p className="stat-number">{user._count.listings}</p>
+              <p className="stat-number">
+                {user.stores.reduce(
+                  (sum, store) => sum + store._count.listings,
+                  0
+                )}
+              </p>
             </div>
           </div>
         </div>

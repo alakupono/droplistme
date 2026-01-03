@@ -8,7 +8,7 @@ import { isAdmin } from "@/lib/auth";
  */
 export async function GET(
   request: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const { userId: currentUserId } = await auth();
@@ -22,8 +22,10 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const { userId } = await params;
+
     const user = await db.user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
       include: {
         stores: {
           include: {
@@ -33,7 +35,7 @@ export async function GET(
           },
         },
         _count: {
-          select: { stores: true, listings: true },
+          select: { stores: true },
         },
       },
     });
@@ -57,7 +59,7 @@ export async function GET(
  */
 export async function DELETE(
   request: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const { userId: currentUserId } = await auth();
@@ -71,8 +73,10 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const { userId } = await params;
+
     await db.user.delete({
-      where: { id: params.userId },
+      where: { id: userId },
     });
 
     return NextResponse.json({ message: "User deleted successfully" });

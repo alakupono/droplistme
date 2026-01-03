@@ -30,7 +30,6 @@ export default async function AdminPage() {
       _count: {
         select: {
           stores: true,
-          listings: true,
         },
       },
     },
@@ -90,23 +89,29 @@ export default async function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td>{user.email || "N/A"}</td>
-                    <td className="user-id">{user.id.slice(0, 8)}...</td>
-                    <td>{user._count.stores}</td>
-                    <td>{user._count.listings}</td>
-                    <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-                    <td>
-                      <Link
-                        href={`/admin/users/${user.id}`}
-                        className="btn-link"
-                      >
-                        View
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                {users.map((user) => {
+                  const totalListings = user.stores.reduce(
+                    (sum, store) => sum + store._count.listings,
+                    0
+                  );
+                  return (
+                    <tr key={user.id}>
+                      <td>{user.email || "N/A"}</td>
+                      <td className="user-id">{user.id.slice(0, 8)}...</td>
+                      <td>{user._count.stores}</td>
+                      <td>{totalListings}</td>
+                      <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                      <td>
+                        <Link
+                          href={`/admin/users/${user.id}`}
+                          className="btn-link"
+                        >
+                          View
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
