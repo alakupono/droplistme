@@ -279,6 +279,7 @@ export async function ebayApiRequest(
     headers: {
       'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       ...options.headers,
     },
   })
