@@ -74,27 +74,47 @@ export default async function ConnectCallbackPage({ searchParams }: PageProps) {
       ebayLib.getEbayIdentity(tokenResponse.access_token).catch(() => null),
     ]);
 
-    // Determine store name from available info
-    const storeName = 
-      identityInfo?.username || 
-      accountInfo?.username || 
-      accountInfo?.accountId || 
-      'eBay Store';
+    // Determine store name + identity
+    const ebayUsername = identityInfo?.username || accountInfo?.username || null;
+    const ebayUserId = identityInfo?.userId || null;
+    const storeName =
+      ebayUsername ||
+      accountInfo?.accountId ||
+      "eBay Store";
 
     // Calculate token expiry
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + tokenResponse.expires_in);
 
-    // Create store record
-    const store = await db.store.create({
-      data: {
-        userId: user.id,
-        ebayStoreName: storeName,
-        ebayAccessToken: tokenResponse.access_token,
-        ebayRefreshToken: tokenResponse.refresh_token,
-        ebayTokenExpiry: expiresAt,
-      },
+    // Single account per app user: update existing record if present, otherwise create.
+    const existing = await db.store.findFirst({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
     });
+
+    const store = existing
+      ? await db.store.update({
+          where: { id: existing.id },
+          data: {
+            ebayStoreName: storeName,
+            ebayUsername,
+            ebayUserId,
+            ebayAccessToken: tokenResponse.access_token,
+            ebayRefreshToken: tokenResponse.refresh_token,
+            ebayTokenExpiry: expiresAt,
+          },
+        })
+      : await db.store.create({
+          data: {
+            userId: user.id,
+            ebayStoreName: storeName,
+            ebayUsername,
+            ebayUserId,
+            ebayAccessToken: tokenResponse.access_token,
+            ebayRefreshToken: tokenResponse.refresh_token,
+            ebayTokenExpiry: expiresAt,
+          },
+        });
 
     return (
       <div className="profile-container">
@@ -104,8 +124,8 @@ export default async function ConnectCallbackPage({ searchParams }: PageProps) {
             Your eBay account has been successfully connected.
           </p>
           <div style={{ marginTop: '24px' }}>
-            <Link href="/stores" className="btn btn-primary">
-              Go to Stores
+            <Link href="/listings" className="btn btn-primary">
+              Go to Listings
             </Link>
           </div>
         </div>

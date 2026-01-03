@@ -23,11 +23,11 @@ export default function Home() {
           <SignedIn>
             <div className="user-section">
               <Link 
-                href="/stores" 
+                href="/listings" 
                 className="btn btn-primary"
                 style={{ textDecoration: 'none', display: 'inline-block' }}
               >
-                My Stores
+                My Listings
               </Link>
               <UserButton afterSignOutUrl="/" />
             </div>

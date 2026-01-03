@@ -26,6 +26,8 @@ model Store {
   id              String   @id @default(uuid())
   userId          String   @map("user_id")
   ebayStoreName   String?  @map("ebay_store_name")
+  ebayUserId      String?  @map("ebay_user_id")
+  ebayUsername    String?  @map("ebay_username")
   ebayAccessToken String?  @map("ebay_access_token")
   ebayRefreshToken String? @map("ebay_refresh_token")
   ebayTokenExpiry DateTime? @map("ebay_token_expiry")
@@ -41,12 +43,15 @@ model Store {
 model Listing {
   id            String   @id @default(uuid())
   storeId       String   @map("store_id")
+  ebayOfferId   String?  @unique @map("ebay_offer_id")
+  sku           String?  @map("sku")
   ebayItemId    String?  @unique @map("ebay_item_id")
   title         String
   description   String?  @db.Text
   price         Decimal? @db.Decimal(10, 2)
   quantity      Int      @default(1)
   status        String   @default("draft") // draft, active, sold, ended
+  marketplaceId String?  @map("marketplace_id")
   categoryId    String?  @map("category_id")
   condition     String?
   images        String[] // Array of image URLs
