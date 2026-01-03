@@ -49,6 +49,7 @@ export function getEbayAuthUrl(redirectUri: string, state?: string): string {
     'https://api.ebay.com/oauth/api_scope/sell.inventory', // View and manage inventory/offers
     'https://api.ebay.com/oauth/api_scope/sell.marketing.readonly', // View marketing activities
     'https://api.ebay.com/oauth/api_scope/sell.account.readonly', // View account settings
+    'https://api.ebay.com/oauth/api_scope/sell.account', // Manage seller account settings (required by some account endpoints)
     'https://api.ebay.com/oauth/api_scope/sell.stores.readonly', // View eBay stores
     'https://api.ebay.com/oauth/api_scope/commerce.identity.readonly', // View user info
   ].join(' ')
@@ -230,7 +231,7 @@ export async function refreshEbayToken(
     body: new URLSearchParams({
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
-      scope: 'https://api.ebay.com/oauth/api_scope/sell.inventory https://api.ebay.com/oauth/api_scope/sell.marketing.readonly https://api.ebay.com/oauth/api_scope/sell.account.readonly https://api.ebay.com/oauth/api_scope/sell.stores.readonly https://api.ebay.com/oauth/api_scope/commerce.identity.readonly',
+      scope: 'https://api.ebay.com/oauth/api_scope/sell.inventory https://api.ebay.com/oauth/api_scope/sell.marketing.readonly https://api.ebay.com/oauth/api_scope/sell.account.readonly https://api.ebay.com/oauth/api_scope/sell.account https://api.ebay.com/oauth/api_scope/sell.stores.readonly https://api.ebay.com/oauth/api_scope/commerce.identity.readonly',
     }),
   })
 
@@ -283,8 +284,10 @@ export async function ebayApiRequest(
   })
 
   if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`eBay API request failed: ${error}`)
+    const errorText = await response.text().catch(() => '')
+    throw new Error(
+      `eBay API request failed (HTTP ${response.status}) ${endpoint}: ${errorText}`
+    )
   }
 
   return await response.json()
