@@ -5,6 +5,8 @@ import { db } from "@/lib/db";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminPage() {
   const { userId } = await auth();
   

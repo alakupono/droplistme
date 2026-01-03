@@ -4,38 +4,46 @@ import { getOrCreateUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProfilePage() {
-  const { userId } = await auth();
-  
-  if (!userId) {
-    redirect("/");
-  }
+  try {
+    const { userId } = await auth();
+    
+    if (!userId) {
+      redirect("/");
+    }
 
-  const clerkUser = await currentUser();
-  const user = await getOrCreateUser();
+    const clerkUser = await currentUser();
+    
+    if (!clerkUser) {
+      redirect("/");
+    }
 
-  if (!user || !clerkUser) {
-    redirect("/");
-  }
+    const user = await getOrCreateUser();
 
-  // Get user stats
-  const stats = await db.user.findUnique({
-    where: { id: user.id },
-    include: {
-      _count: {
-        select: {
-          stores: true,
+    if (!user) {
+      redirect("/");
+    }
+
+    // Get user stats
+    const stats = await db.user.findUnique({
+      where: { id: user.id },
+      include: {
+        _count: {
+          select: {
+            stores: true,
+          },
         },
-      },
-      stores: {
-        include: {
-          _count: {
-            select: { listings: true },
+        stores: {
+          include: {
+            _count: {
+              select: { listings: true },
+            },
           },
         },
       },
-    },
-  });
+    });
 
   const isAdmin = clerkUser.publicMetadata?.role === "admin";
 
@@ -129,5 +137,19 @@ export default async function ProfilePage() {
       </div>
     </div>
   );
+  } catch (error) {
+    console.error('Profile page error:', error);
+    return (
+      <div className="profile-container">
+        <div className="profile-card">
+          <h1>Error Loading Profile</h1>
+          <p>There was an error loading your profile. Please try again.</p>
+          <Link href="/" className="btn btn-primary">
+            Go Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 }
 
