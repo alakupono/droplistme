@@ -38,6 +38,11 @@ export function getEbayAuthUrl(redirectUri: string, state?: string): string {
     throw new Error('EBAY_CLIENT_ID is not set in environment variables')
   }
 
+  // eBay is strict: redirect_uri must EXACTLY match a Login redirect URI
+  // configured in the eBay developer portal, otherwise you get:
+  // {"error_id":"invalid_request","error_description":"Input request parameters are invalid.","http_status_code":400}
+  // In production, also avoid apex->www redirects by using your canonical domain.
+
   // Request scopes needed for listing items and managing inventory
   // Based on eBay API documentation and enabled scopes
   const scopes = [
@@ -60,6 +65,29 @@ export function getEbayAuthUrl(redirectUri: string, state?: string): string {
   }
 
   return `${config.authUrl}?${params.toString()}`
+}
+
+/**
+ * Centralized redirect URI used for BOTH:
+ * - Authorization request (redirect_uri param)
+ * - Token exchange request (redirect_uri param)
+ *
+ * This MUST exactly match a "Login redirect URI" configured in the eBay app settings.
+ */
+export function getEbayOAuthRedirectUri(): string {
+  const explicit = process.env.EBAY_OAUTH_REDIRECT_URI
+  if (explicit && typeof explicit === 'string' && explicit.trim().length > 0) {
+    return explicit.trim()
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (appUrl && typeof appUrl === 'string' && appUrl.trim().length > 0) {
+    const base = appUrl.trim().replace(/\/$/, '')
+    return `${base}/stores/connect/callback`
+  }
+
+  // Last resort for local dev only.
+  return 'http://localhost:3000/stores/connect/callback'
 }
 
 /**

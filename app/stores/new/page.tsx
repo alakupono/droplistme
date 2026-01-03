@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getOrCreateUser } from "@/lib/auth";
-import { getEbayAuthUrl } from "@/lib/ebay";
+import { getEbayAuthUrl, getEbayOAuthRedirectUri } from "@/lib/ebay";
 import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +20,8 @@ export default async function NewStorePage() {
   }
 
   // Generate OAuth URL for eBay
-  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/stores/connect/callback`;
+  // IMPORTANT: redirect URI must exactly match what's configured in eBay developer portal
+  const redirectUri = getEbayOAuthRedirectUri();
   const authUrl = getEbayAuthUrl(redirectUri, user.id);
 
   return (
