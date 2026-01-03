@@ -1,5 +1,4 @@
 import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import { getOrCreateUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import Link from "next/link";
@@ -10,13 +9,56 @@ export default async function StoresPage() {
   const { userId } = await auth();
   
   if (!userId) {
-    redirect("/");
+    // Don't silently bounce to home (looks like the button does nothing).
+    // Show a clear signed-out state and let the user sign in.
+    return (
+      <div className="profile-container">
+        <div className="admin-card">
+          <h1>Sign in required</h1>
+          <p>You must be signed in to view your Stores dashboard.</p>
+          <div style={{ marginTop: 16, display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <Link href="/" className="btn btn-primary">
+              Go to Sign In
+            </Link>
+          </div>
+          <p style={{ marginTop: 12, fontSize: 12, color: "#666" }}>
+            Tip: make sure you’re using <strong>https://www.droplist.me</strong> (not the apex domain) so your session is consistent.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const user = await getOrCreateUser();
 
   if (!user) {
-    redirect("/");
+    const hasDbUrl = !!process.env.DATABASE_URL;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "NOT SET";
+    return (
+      <div className="profile-container">
+        <div className="admin-card">
+          <h1>Couldn’t load Stores</h1>
+          <p>
+            We couldn’t load your dashboard. This is usually a database or environment-variable issue.
+          </p>
+          <div style={{ marginTop: 16, padding: 16, background: "#f8f9fa", borderRadius: 8, fontSize: 14, color: "#666" }}>
+            <p><strong>Debug info</strong></p>
+            <p>Clerk userId: {userId}</p>
+            <p>DATABASE_URL: {hasDbUrl ? "Set" : "NOT SET"}</p>
+            <p>NEXT_PUBLIC_APP_URL: {appUrl}</p>
+            <p>Environment: {process.env.NODE_ENV || "unknown"}</p>
+          </div>
+          <div style={{ marginTop: 16, display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <Link href="/" className="btn btn-primary">
+              Go Home
+            </Link>
+            <Link href="/profile" className="btn btn-secondary">
+              Profile
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Get user's stores with listing counts
