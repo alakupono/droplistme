@@ -295,40 +295,21 @@ export async function ebayApiRequest(
  * Returns account details including username, account ID, etc.
  */
 export async function getEbayAccount(accessToken: string) {
-  try {
-    const account = await ebayApiRequest('/sell/account/v1/account', accessToken)
-    return account
-  } catch (error) {
-    console.error('Error fetching eBay account:', error)
-    // Return a basic structure if account endpoint fails
-    return { accountId: null, username: null }
-  }
+  return ebayApiRequest('/sell/account/v1/account', accessToken, { method: 'GET' })
 }
 
 /**
  * Get user's eBay identity (username, email, etc.)
  */
 export async function getEbayIdentity(accessToken: string) {
-  try {
-    const identity = await ebayApiRequest('/commerce/identity/v1/user', accessToken)
-    return identity
-  } catch (error) {
-    console.error('Error fetching eBay identity:', error)
-    return null
-  }
+  return ebayApiRequest('/commerce/identity/v1/user', accessToken, { method: 'GET' })
 }
 
 /**
  * Get user's eBay stores
  */
 export async function getEbayStores(accessToken: string) {
-  try {
-    const stores = await ebayApiRequest('/sell/account/v1/store', accessToken)
-    return stores
-  } catch (error) {
-    console.error('Error fetching eBay stores:', error)
-    return null
-  }
+  return ebayApiRequest('/sell/account/v1/store', accessToken, { method: 'GET' })
 }
 
 /**
@@ -361,13 +342,8 @@ export async function getEbayPolicies(accessToken: string, marketplaceId: string
  * Inventory locations (warehouse / ship-from). Offers require merchantLocationKey.
  */
 export async function getEbayInventoryLocations(accessToken: string) {
-  try {
-    // Inventory API - locations
-    return await ebayApiRequest('/sell/inventory/v1/location?limit=100', accessToken, { method: 'GET' })
-  } catch (error) {
-    console.error('Error fetching eBay inventory locations:', error)
-    return null
-  }
+  // Inventory API - locations
+  return ebayApiRequest('/sell/inventory/v1/location?limit=100', accessToken, { method: 'GET' })
 }
 
 /**

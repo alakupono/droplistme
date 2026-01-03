@@ -68,6 +68,11 @@ export default async function NewListingPage() {
   ]);
 
   const locations = (locationsResp as any)?.locations || (locationsResp as any)?.locationSummaries || [];
+  const policyEligibilityError =
+    (policies as any)?.raw?.payment?.error ||
+    (policies as any)?.raw?.fulfillment?.error ||
+    (policies as any)?.raw?.return?.error ||
+    null;
 
   return (
     <div className="profile-container">
@@ -91,6 +96,12 @@ export default async function NewListingPage() {
           <p style={{ color: "#666", marginTop: 8 }}>
             If the dropdowns below are empty, you likely need to create business policies and/or an inventory location in your eBay account (sandbox/production).
           </p>
+          {policyEligibilityError && String(policyEligibilityError).includes("not eligible for Business Policy") && (
+            <p style={{ marginTop: 12, color: "#dc3545" }}>
+              <strong>Blocked:</strong> eBay says this account is <strong>not eligible for Business Policies</strong> (error 20403).
+              Without policy IDs, eBay will not allow publishing offers via the Sell Inventory flow.
+            </p>
+          )}
           <div style={{ marginTop: 12, fontSize: 14, color: "#444" }}>
             <div><strong>Marketplace:</strong> {marketplaceId}</div>
             <div><strong>Payment policies:</strong> {policies.paymentPolicies.length}</div>
