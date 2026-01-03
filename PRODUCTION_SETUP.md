@@ -60,8 +60,12 @@ EBAY_VERIFICATION_TOKEN=e1cb974db66888e6b9de5465bda705364e4c9de6150c2f3688089e1f
 # App URL
 NEXT_PUBLIC_APP_URL=https://www.droplist.me
 
-# eBay OAuth redirect (must EXACTLY match "Login redirect URI" configured in eBay app settings)
-EBAY_OAUTH_REDIRECT_URI=https://www.droplist.me/stores/connect/callback
+# eBay OAuth redirect identifier (REQUIRED)
+# In eBay's "Your eBay Sign-in Settings", this is the RuName (eBay Redirect URL name).
+EBAY_RU_NAME=Robert_Eaton-RobertEa-AZCLis-jdljdv
+
+# Optional fallback (non-standard): raw URL redirect (only if your eBay app is configured that way)
+# EBAY_OAUTH_REDIRECT_URI=https://www.droplist.me/stores/connect/callback
 ```
 
 ## Testing the Webhook

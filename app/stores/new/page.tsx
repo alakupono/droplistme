@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getOrCreateUser } from "@/lib/auth";
-import { getEbayAuthUrl, getEbayOAuthRedirectUri } from "@/lib/ebay";
+import { getEbayAuthUrl, getEbayRedirectUriParam } from "@/lib/ebay";
 import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
@@ -20,8 +20,8 @@ export default async function NewStorePage() {
   }
 
   // Generate OAuth URL for eBay
-  // IMPORTANT: redirect URI must exactly match what's configured in eBay developer portal
-  const redirectUri = getEbayOAuthRedirectUri();
+  // IMPORTANT (eBay): redirect_uri is typically the RuName ("eBay Redirect URL name")
+  const redirectUri = getEbayRedirectUriParam();
   const authUrl = getEbayAuthUrl(redirectUri, user.id);
 
   return (

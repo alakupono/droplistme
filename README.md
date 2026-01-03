@@ -66,7 +66,9 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
    EBAY_ENVIRONMENT=sandbox  # or 'production' for live
    NEXT_PUBLIC_APP_URL=http://localhost:3000  # Your app URL
    EBAY_VERIFICATION_TOKEN=your_verification_token  # For webhooks
-   EBAY_OAUTH_REDIRECT_URI=https://yourdomain.com/stores/connect/callback  # Must match eBay "Login redirect URI"
+   EBAY_RU_NAME=your_ru_name  # REQUIRED for eBay OAuth (redirect_uri param uses RuName)
+   # Optional fallback (non-standard): raw URL redirect
+   EBAY_OAUTH_REDIRECT_URI=https://yourdomain.com/stores/connect/callback
    ```
    
    **Example (Sandbox credentials):**

@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getOrCreateUser } from "@/lib/auth";
-import { exchangeEbayCode, getEbayOAuthRedirectUri } from "@/lib/ebay";
+import { exchangeEbayCode, getEbayRedirectUriParam } from "@/lib/ebay";
 import { db } from "@/lib/db";
 import Link from "next/link";
 
@@ -64,7 +64,7 @@ export default async function ConnectCallbackPage({ searchParams }: PageProps) {
   try {
     // Exchange code for tokens
     // IMPORTANT: must be the exact same redirect_uri used during the authorize step
-    const redirectUri = getEbayOAuthRedirectUri();
+    const redirectUri = getEbayRedirectUriParam();
     const tokenResponse = await exchangeEbayCode(code, redirectUri);
 
     // Get eBay account info and identity

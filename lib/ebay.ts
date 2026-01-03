@@ -38,10 +38,10 @@ export function getEbayAuthUrl(redirectUri: string, state?: string): string {
     throw new Error('EBAY_CLIENT_ID is not set in environment variables')
   }
 
-  // eBay is strict: redirect_uri must EXACTLY match a Login redirect URI
-  // configured in the eBay developer portal, otherwise you get:
-  // {"error_id":"invalid_request","error_description":"Input request parameters are invalid.","http_status_code":400}
-  // In production, also avoid apex->www redirects by using your canonical domain.
+  // eBay is strict: redirect_uri must be a *registered redirect URI*.
+  // For eBay OAuth, redirect_uri is typically the RuName ("eBay Redirect URL name") configured in
+  // eBay Developer Portal → "Your eBay Sign-in Settings" (not the raw callback URL).
+  // If this mismatches you get invalid_request / unauthorized_client.
 
   // Request scopes needed for listing items and managing inventory
   // Based on eBay API documentation and enabled scopes
@@ -68,16 +68,27 @@ export function getEbayAuthUrl(redirectUri: string, state?: string): string {
 }
 
 /**
- * Centralized redirect URI used for BOTH:
+ * Centralized redirect identifier used for BOTH:
  * - Authorization request (redirect_uri param)
  * - Token exchange request (redirect_uri param)
  *
- * This MUST exactly match a "Login redirect URI" configured in the eBay app settings.
+ * IMPORTANT for eBay OAuth:
+ * `redirect_uri` should be the **RuName** ("eBay Redirect URL name"), not a raw URL.
+ * Set `EBAY_RU_NAME` in your environment to this value.
+ *
+ * Fallback behavior:
+ * If `EBAY_RU_NAME` is not set, we fall back to `EBAY_OAUTH_REDIRECT_URI` (raw URL) for
+ * non-standard setups / local testing, but production should use RuName.
  */
-export function getEbayOAuthRedirectUri(): string {
-  const explicit = process.env.EBAY_OAUTH_REDIRECT_URI
-  if (explicit && typeof explicit === 'string' && explicit.trim().length > 0) {
-    return explicit.trim()
+export function getEbayRedirectUriParam(): string {
+  const ruName = process.env.EBAY_RU_NAME
+  if (ruName && typeof ruName === 'string' && ruName.trim().length > 0) {
+    return ruName.trim()
+  }
+
+  const explicitUrl = process.env.EBAY_OAUTH_REDIRECT_URI
+  if (explicitUrl && typeof explicitUrl === 'string' && explicitUrl.trim().length > 0) {
+    return explicitUrl.trim()
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL
