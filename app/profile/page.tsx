@@ -105,7 +105,7 @@ export default async function ProfilePage() {
           <div className="profile-card">
             <h2>My Stores</h2>
             <div className="stores-list">
-              {stats.stores.map((store) => (
+              {stats.stores.map((store: typeof stats.stores[0]) => (
                 <div key={store.id} className="store-item">
                   <div>
                     <h3>{store.ebayStoreName || "Unnamed Store"}</h3>

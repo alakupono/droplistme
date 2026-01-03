@@ -116,7 +116,7 @@ export default async function UserDetailPage({
           <div className="admin-card">
             <h2>Stores</h2>
             <div className="stores-list">
-              {user.stores.map((store) => (
+              {user.stores.map((store: typeof user.stores[0]) => (
                 <div key={store.id} className="store-item">
                   <div>
                     <h3>{store.ebayStoreName || "Unnamed Store"}</h3>
