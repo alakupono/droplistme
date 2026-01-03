@@ -104,7 +104,7 @@ export default async function UserDetailPage({
               <h3>Listings</h3>
               <p className="stat-number">
                 {user.stores.reduce(
-                  (sum, store) => sum + store._count.listings,
+                  (sum: number, store: typeof user.stores[0]) => sum + store._count.listings,
                   0
                 )}
               </p>
