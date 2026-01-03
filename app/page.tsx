@@ -22,7 +22,11 @@ export default function Home() {
           </SignedOut>
           <SignedIn>
             <div className="user-section">
-              <Link href="/profile" className="btn btn-primary">
+              <Link 
+                href="/profile" 
+                className="btn btn-primary"
+                style={{ textDecoration: 'none', display: 'inline-block' }}
+              >
                 My Profile
               </Link>
               <UserButton afterSignOutUrl="/" />
