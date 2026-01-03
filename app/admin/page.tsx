@@ -89,9 +89,9 @@ export default async function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => {
+                {users.map((user: typeof users[0]) => {
                   const totalListings = user.stores.reduce(
-                    (sum, store) => sum + store._count.listings,
+                    (sum: number, store: typeof user.stores[0]) => sum + store._count.listings,
                     0
                   );
                   return (
