@@ -101,9 +101,9 @@ export default async function ProfilePage() {
           </div>
         </div>
 
-        {stats?.stores && stats.stores.length > 0 && (
-          <div className="profile-card">
-            <h2>My Stores</h2>
+        <div className="profile-card">
+          <h2>My Stores</h2>
+          {stats?.stores && stats.stores.length > 0 ? (
             <div className="stores-list">
               {stats.stores.map((store: typeof stats.stores[0]) => (
                 <div key={store.id} className="store-item">
@@ -117,8 +117,15 @@ export default async function ProfilePage() {
                 </div>
               ))}
             </div>
+          ) : (
+            <p className="empty-message">No stores yet. Create your first store to get started.</p>
+          )}
+          <div style={{ marginTop: "20px" }}>
+            <Link href="/stores" className="btn btn-primary">
+              {stats?.stores && stats.stores.length > 0 ? "Manage Stores" : "Create Store"}
+            </Link>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
