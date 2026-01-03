@@ -1,31 +1,52 @@
-import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { getOrCreateUser } from "@/lib/auth";
-import { exchangeEbayCode, getEbayRedirectUriParam } from "@/lib/ebay";
+import { exchangeEbayCode, getEbayRedirectUriParam, parseEbayState } from "@/lib/ebay";
 import { db } from "@/lib/db";
 import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
+export const runtime = "nodejs";
 
 interface PageProps {
   searchParams: Promise<{ code?: string; error?: string; state?: string }>;
 }
 
 export default async function ConnectCallbackPage({ searchParams }: PageProps) {
-  const { userId } = await auth();
-  
-  if (!userId) {
-    redirect("/");
-  }
-
-  const user = await getOrCreateUser();
-
-  if (!user) {
-    redirect("/");
-  }
-
   const params = await searchParams;
   const { code, error, state } = params;
+
+  const parsed = parseEbayState(state);
+  if (!parsed) {
+    return (
+      <div className="profile-container">
+        <div className="admin-card">
+          <h1>Connection Failed</h1>
+          <p style={{ color: "#dc3545", marginBottom: "20px" }}>
+            Missing or invalid OAuth state. Please start the connection flow again from Droplist.me.
+          </p>
+          <Link href="/listings" className="btn btn-primary">
+            Back to Listings
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const user = await db.user.findUnique({ where: { id: parsed.userDbId } });
+  if (!user) {
+    return (
+      <div className="profile-container">
+        <div className="admin-card">
+          <h1>Connection Failed</h1>
+          <p style={{ color: "#dc3545", marginBottom: "20px" }}>
+            Could not find your Droplist user record. Please sign in and retry.
+          </p>
+          <Link href="/" className="btn btn-primary">
+            Go Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // Handle OAuth errors
   if (error) {
@@ -128,6 +149,9 @@ export default async function ConnectCallbackPage({ searchParams }: PageProps) {
               Go to Listings
             </Link>
           </div>
+          <p style={{ marginTop: 12, fontSize: 12, color: "#666" }}>
+            You can close this tab now and return to Droplist.me.
+          </p>
         </div>
       </div>
     );

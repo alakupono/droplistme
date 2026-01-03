@@ -102,6 +102,56 @@ export function getEbayRedirectUriParam(): string {
 }
 
 /**
+ * Generate a signed OAuth state so we can complete the callback even if the user loses their Clerk session.
+ * Format: base64url(userDbId).timestamp.hex(hmac)
+ */
+export function generateEbayState(userDbId: string): string {
+  const secret = process.env.EBAY_STATE_SECRET
+  if (!secret) {
+    // Dev fallback: still works but not tamper-proof. Set EBAY_STATE_SECRET in production.
+    return userDbId
+  }
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { createHmac } = require('crypto') as typeof import('crypto')
+  const ts = Date.now().toString()
+  const payload = `${userDbId}.${ts}`
+  const sig = createHmac('sha256', secret).update(payload).digest('hex')
+  const b64 = Buffer.from(userDbId, 'utf8').toString('base64url')
+  return `${b64}.${ts}.${sig}`
+}
+
+export function parseEbayState(state: string | null | undefined): { userDbId: string } | null {
+  if (!state) return null
+  const secret = process.env.EBAY_STATE_SECRET
+
+  // Dev fallback (unsigned)
+  if (!secret && state.includes('.') === false) {
+    return { userDbId: state }
+  }
+  if (!secret) return null
+
+  const parts = state.split('.')
+  if (parts.length !== 3) return null
+  const [b64, ts, sig] = parts
+  const userDbId = Buffer.from(b64, 'base64url').toString('utf8')
+  if (!userDbId) return null
+
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { createHmac, timingSafeEqual } = require('crypto') as typeof import('crypto')
+  const payload = `${userDbId}.${ts}`
+  const expected = createHmac('sha256', secret).update(payload).digest('hex')
+  try {
+    const a = Buffer.from(expected, 'utf8')
+    const b = Buffer.from(sig, 'utf8')
+    if (a.length !== b.length) return null
+    if (!timingSafeEqual(a, b)) return null
+  } catch {
+    return null
+  }
+  return { userDbId }
+}
+
+/**
  * Exchange authorization code for access token
  */
 export async function exchangeEbayCode(

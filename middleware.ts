@@ -15,6 +15,11 @@ export default clerkMiddleware((auth, req) => {
   if (req.nextUrl.pathname === "/api/ebay/webhook") {
     return;
   }
+
+  // Allow public access to eBay OAuth callback (eBay will redirect here without Clerk session)
+  if (req.nextUrl.pathname === "/stores/connect/callback") {
+    return;
+  }
   // All other routes require authentication
 });
 
