@@ -60,6 +60,8 @@ export default async function NewStorePage() {
             <a 
               href={authUrl}
               className="btn btn-primary"
+              target="_blank"
+              rel="noreferrer"
               style={{ 
                 display: 'inline-block',
                 textDecoration: 'none',
@@ -68,6 +70,9 @@ export default async function NewStorePage() {
             >
               Connect to eBay
             </a>
+            <p style={{ marginTop: 12, fontSize: 13, color: "#666" }}>
+              After approving on eBay, return to this tab and refresh your Listings page.
+            </p>
           </div>
         </div>
       </div>
