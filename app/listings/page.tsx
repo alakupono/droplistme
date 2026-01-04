@@ -68,6 +68,9 @@ export default async function ListingsPage() {
           <Link href="/listings/new" className="btn btn-primary" style={{ textDecoration: "none" }}>
             Create Listing
           </Link>
+          <Link href="/drops" className="btn btn-secondary" style={{ textDecoration: "none" }}>
+            Drop Listings
+          </Link>
           <Link href="/profile" className="btn btn-secondary" style={{ textDecoration: "none" }}>
             Profile
           </Link>

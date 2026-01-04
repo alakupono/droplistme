@@ -20,6 +20,11 @@ export default clerkMiddleware((auth, req) => {
   if (req.nextUrl.pathname === "/stores/connect/callback") {
     return;
   }
+
+  // Allow public access to DropListing image URLs (eBay needs to fetch images)
+  if (req.nextUrl.pathname.startsWith("/api/drops/images/")) {
+    return;
+  }
   // All other routes require authentication
 });
 

@@ -41,8 +41,46 @@ model Store {
   
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   listings Listing[]
+  dropListings DropListing[]
   
   @@map("stores")
+}
+
+model DropListing {
+  id          String   @id @default(uuid())
+  storeId     String   @map("store_id")
+  status      String   @default("processing") // processing, needs_review, ready_to_publish, published, failed
+
+  // Images are stored as Data URLs for MVP (works locally + on Vercel without external storage).
+  // Keep images small (client resizes) to avoid DB bloat.
+  images      String[]
+
+  // Draft listing fields (AI-generated, then user editable)
+  title       String?
+  description String?  @db.Text
+  categoryId  String?  @map("category_id")
+  condition   String?
+  price       Decimal? @db.Decimal(10, 2)
+  quantity    Int      @default(1)
+  sku         String?
+  marketplaceId String? @map("marketplace_id")
+
+  // AI debugging / provenance
+  aiExtractedText String? @db.Text @map("ai_extracted_text")
+  aiRaw           Json?   @map("ai_raw")
+  aiNotes         String[] @map("ai_notes")
+  error           String?
+
+  // Link to a published Listing (optional)
+  publishedListingId String? @unique @map("published_listing_id")
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  publishedListing Listing? @relation("DropListingPublished", fields: [publishedListingId], references: [id], onDelete: SetNull)
+
+  @@map("drop_listings")
 }
 
 model Listing {
@@ -66,6 +104,7 @@ model Listing {
   listedAt      DateTime? @map("listed_at") // When actually listed on eBay
   
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  publishedDropListing DropListing? @relation("DropListingPublished")
   
   @@map("listings")
 }
