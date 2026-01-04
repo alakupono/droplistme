@@ -2,7 +2,14 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { getOrCreateUser } from "@/lib/auth";
-import { getValidEbayToken, refreshEbayToken, createOrReplaceInventoryItem, createEbayOffer, publishEbayOffer } from "@/lib/ebay";
+import {
+  getValidEbayToken,
+  refreshEbayToken,
+  createOrReplaceInventoryItem,
+  createEbayOffer,
+  publishEbayOffer,
+  getEbayPolicies,
+} from "@/lib/ebay";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -41,26 +48,11 @@ export async function POST(_req: Request, { params }: { params: Promise<{ dropId
         { status: 400 }
       );
     }
-    if (!store.paymentPolicyId || !store.fulfillmentPolicyId || !store.returnPolicyId) {
-      return NextResponse.json(
-        {
-          error: "Missing eBay policy IDs (payment/fulfillment/return). Save them from /api/ebay/diagnostics.",
-          storeDefaults: {
-            paymentPolicyId: store.paymentPolicyId,
-            fulfillmentPolicyId: store.fulfillmentPolicyId,
-            returnPolicyId: store.returnPolicyId,
-            merchantLocationKey: store.merchantLocationKey,
-            marketplaceId: store.marketplaceId,
-          },
-        },
-        { status: 400 }
-      );
-    }
+    const marketplaceId = store.marketplaceId || drop.marketplaceId || "EBAY_US";
 
     const title = requireString(drop.title, "title");
     const categoryId = requireString(drop.categoryId, "categoryId");
     const sku = drop.sku && typeof drop.sku === "string" ? drop.sku : `drop-${Date.now()}`;
-    const marketplaceId = store.marketplaceId || drop.marketplaceId || "EBAY_US";
     const quantity = drop.quantity && drop.quantity > 0 ? drop.quantity : 1;
     const priceValue = requireString(drop.price ? String(drop.price) : null, "price");
     const description = drop.description || null;
@@ -90,6 +82,52 @@ export async function POST(_req: Request, { params }: { params: Promise<{ dropId
       // continue
     }
 
+    // Auto-bootstrap policy IDs if missing (removes manual step).
+    let paymentPolicyId = store.paymentPolicyId;
+    let fulfillmentPolicyId = store.fulfillmentPolicyId;
+    let returnPolicyId = store.returnPolicyId;
+    if (!paymentPolicyId || !fulfillmentPolicyId || !returnPolicyId) {
+      const policies = await getEbayPolicies(accessToken, marketplaceId);
+      paymentPolicyId = paymentPolicyId || policies.paymentPolicies?.[0]?.paymentPolicyId || null;
+      fulfillmentPolicyId = fulfillmentPolicyId || policies.fulfillmentPolicies?.[0]?.fulfillmentPolicyId || null;
+      returnPolicyId = returnPolicyId || policies.returnPolicies?.[0]?.returnPolicyId || null;
+
+      // Persist if we found anything
+      if (paymentPolicyId || fulfillmentPolicyId || returnPolicyId) {
+        await db.store.update({
+          where: { id: store.id },
+          data: {
+            marketplaceId,
+            ...(paymentPolicyId ? { paymentPolicyId } : {}),
+            ...(fulfillmentPolicyId ? { fulfillmentPolicyId } : {}),
+            ...(returnPolicyId ? { returnPolicyId } : {}),
+          },
+        });
+      }
+    }
+
+    if (!paymentPolicyId || !fulfillmentPolicyId || !returnPolicyId) {
+      return NextResponse.json(
+        {
+          error:
+            "Missing eBay policy IDs (payment/fulfillment/return). Create policies in Seller Hub, or load them via /api/ebay/diagnostics.",
+          policyCounts: {
+            payment: store.paymentPolicyId ? 1 : 0,
+            fulfillment: store.fulfillmentPolicyId ? 1 : 0,
+            return: store.returnPolicyId ? 1 : 0,
+          },
+          storeDefaults: {
+            paymentPolicyId,
+            fulfillmentPolicyId,
+            returnPolicyId,
+            merchantLocationKey: store.merchantLocationKey,
+            marketplaceId,
+          },
+        },
+        { status: 400 }
+      );
+    }
+
     // 1) Inventory Item
     await createOrReplaceInventoryItem(accessToken, sku, {
       title,
@@ -111,9 +149,9 @@ export async function POST(_req: Request, { params }: { params: Promise<{ dropId
       priceValue,
       currency: "USD",
       quantity,
-      paymentPolicyId: store.paymentPolicyId,
-      fulfillmentPolicyId: store.fulfillmentPolicyId,
-      returnPolicyId: store.returnPolicyId,
+      paymentPolicyId,
+      fulfillmentPolicyId,
+      returnPolicyId,
     });
 
     const offerId = (offerResp as any)?.offerId as string | undefined;
