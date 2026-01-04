@@ -15,6 +15,7 @@ export function DropDetailClient(props: {
     quantity: number;
     imagesCount: number;
     publishedListingId: string | null;
+    specifics?: Record<string, any> | null;
   };
 }) {
   const router = useRouter();
@@ -25,6 +26,18 @@ export function DropDetailClient(props: {
   const [price, setPrice] = useState(props.initial.price || "");
   const [quantity, setQuantity] = useState(String(props.initial.quantity || 1));
   const [status, setStatus] = useState(props.initial.status);
+  const [specifics, setSpecifics] = useState<Record<string, string>>(() => {
+    const raw = props.initial.specifics || {};
+    const out: Record<string, string> = {};
+    if (raw && typeof raw === "object") {
+      for (const [k, v] of Object.entries(raw)) {
+        const key = String(k).trim();
+        if (!key) continue;
+        out[key] = Array.isArray(v) ? String(v[0] ?? "").trim() : String(v ?? "").trim();
+      }
+    }
+    return out;
+  });
 
   const [isWorking, setIsWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +59,7 @@ export function DropDetailClient(props: {
           price,
           quantity: parseInt(quantity, 10),
           status,
+          specifics,
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -143,6 +157,58 @@ export function DropDetailClient(props: {
         <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>Description</div>
         <textarea className="input" rows={10} value={description} onChange={(e) => setDescription(e.target.value)} />
       </label>
+
+      <div style={{ marginTop: 16 }}>
+        <h3 style={{ marginTop: 0 }}>Item Specifics</h3>
+        <p style={{ color: "#666", marginTop: 6 }}>
+          These are sent to eBay as <strong>Inventory Item product.aspects</strong>. Add as many as you can (Mineral, Color, Shape, Weight, Size, Finish, etc.).
+        </p>
+        <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 10 }}>
+          {Object.entries(specifics).map(([k, v]) => (
+            <div key={k} style={{ display: "contents" }}>
+              <input
+                className="input"
+                value={k}
+                onChange={(e) => {
+                  const nk = e.target.value;
+                  setSpecifics((prev) => {
+                    const next = { ...prev };
+                    const val = next[k];
+                    delete next[k];
+                    if (nk.trim()) next[nk.trim()] = val;
+                    return next;
+                  });
+                }}
+              />
+              <input
+                className="input"
+                value={v}
+                onChange={(e) => setSpecifics((prev) => ({ ...prev, [k]: e.target.value }))}
+              />
+              <button
+                className="btn btn-secondary"
+                onClick={() => setSpecifics((prev) => {
+                  const next = { ...prev };
+                  delete next[k];
+                  return next;
+                })}
+                type="button"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 10 }}>
+          <button
+            className="btn btn-secondary"
+            type="button"
+            onClick={() => setSpecifics((prev) => ({ ...prev, "Mineral": prev["Mineral"] || "" }))}
+          >
+            + Add Specific
+          </button>
+        </div>
+      </div>
 
       <div style={{ marginTop: 16, display: "flex", gap: 12, flexWrap: "wrap" }}>
         <button className="btn btn-primary" onClick={save} disabled={isWorking}>

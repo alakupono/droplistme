@@ -79,8 +79,26 @@ export default async function DropDetailPage({ params }: PageProps) {
             quantity: drop.quantity,
             imagesCount: drop.images.length,
             publishedListingId: drop.publishedListingId,
+            specifics: (drop as any).specifics ?? null,
           }}
         />
+
+        <div className="admin-card">
+          <h2>eBay Publish Preview</h2>
+          <div style={{ marginTop: 10, fontSize: 14, color: "#444" }}>
+            <div><strong>merchantLocationKey:</strong> {drop.store.merchantLocationKey || "(missing)"}</div>
+            <div><strong>paymentPolicyId:</strong> {drop.store.paymentPolicyId || "(missing)"}</div>
+            <div><strong>fulfillmentPolicyId:</strong> {drop.store.fulfillmentPolicyId || "(missing)"}</div>
+            <div><strong>returnPolicyId:</strong> {drop.store.returnPolicyId || "(missing)"}</div>
+            <div><strong>categoryId:</strong> {drop.categoryId || "(missing)"}</div>
+            <div><strong>condition:</strong> {drop.condition || "(missing)"}</div>
+            <div><strong>sku:</strong> {drop.sku || "(auto)"} </div>
+            <div><strong>images:</strong> {drop.images.length}</div>
+          </div>
+          <p style={{ marginTop: 10, fontSize: 12, color: "#666" }}>
+            Item specifics are sent to eBay as Inventory Item <code>product.aspects</code>.
+          </p>
+        </div>
 
         {drop.aiNotes?.length ? (
           <div className="admin-card">

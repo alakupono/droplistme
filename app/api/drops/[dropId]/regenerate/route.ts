@@ -47,6 +47,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ dropId
         condition: draft.condition,
         price: recommendedPrice as any,
         quantity: draft.quantity || 1,
+        specifics: draft.specifics as any,
         aiExtractedText: draft.extractedText || null,
         aiRaw: draft as any,
         aiNotes: draft.notes || [],

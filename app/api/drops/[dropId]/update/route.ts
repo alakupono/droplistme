@@ -29,6 +29,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ dro
     if (typeof body.price === "string" || typeof body.price === "number") data.price = String(body.price) as any;
     if (typeof body.quantity === "number") data.quantity = Math.max(1, Math.floor(body.quantity));
     if (typeof body.status === "string") data.status = body.status;
+    if (body.specifics && typeof body.specifics === "object") data.specifics = body.specifics;
 
     const updated = await db.dropListing.update({ where: { id: drop.id }, data });
     return NextResponse.json({ ok: true, drop: updated }, { status: 200 });

@@ -64,6 +64,7 @@ model DropListing {
   quantity    Int      @default(1)
   sku         String?
   marketplaceId String? @map("marketplace_id")
+  specifics   Json?    @map("specifics") // e.g. {"Mineral":"Quartz","Color":"Clear"}
 
   // AI debugging / provenance
   aiExtractedText String? @db.Text @map("ai_extracted_text")

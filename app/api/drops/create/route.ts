@@ -81,6 +81,7 @@ export async function POST(req: NextRequest) {
         price: recommendedPrice as any,
         quantity: draft.quantity || 1,
         sku: `drop-${Date.now()}`,
+        specifics: draft.specifics as any,
         aiExtractedText: draft.extractedText || null,
         aiRaw: draft as any,
         aiNotes: draft.notes || [],

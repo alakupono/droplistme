@@ -48,6 +48,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ dropId
     const priceValue = requireString(drop.price ? String(drop.price) : null, "price");
     const description = drop.description || null;
     const condition = drop.condition || "USED_GOOD";
+    const aspects = (drop.specifics && typeof drop.specifics === "object") ? (drop.specifics as any) : undefined;
 
     // Build public image URLs that eBay can fetch
     const imageUrls = (drop.images || []).slice(0, 8).map((_, i) => {
@@ -79,6 +80,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ dropId
       condition,
       imageUrls,
       quantity,
+      aspects,
     });
 
     // 2) Offer

@@ -382,6 +382,7 @@ export async function createOrReplaceInventoryItem(
     condition?: string | null
     imageUrls?: string[]
     quantity: number
+    aspects?: Record<string, string | string[]>
   }
 ) {
   const body: any = {
@@ -398,6 +399,22 @@ export async function createOrReplaceInventoryItem(
   if (payload.description) body.product.description = payload.description
   if (payload.condition) body.condition = payload.condition
   if (payload.imageUrls && payload.imageUrls.length > 0) body.product.imageUrls = payload.imageUrls
+  if (payload.aspects && typeof payload.aspects === 'object') {
+    // Inventory API expects aspects as { Key: ["Value"] }
+    const aspects: Record<string, string[]> = {}
+    for (const [k, v] of Object.entries(payload.aspects)) {
+      const key = String(k).trim()
+      if (!key) continue
+      if (Array.isArray(v)) {
+        const vals = v.map((x) => String(x).trim()).filter(Boolean)
+        if (vals.length) aspects[key] = vals
+      } else if (v !== null && v !== undefined) {
+        const val = String(v).trim()
+        if (val) aspects[key] = [val]
+      }
+    }
+    if (Object.keys(aspects).length > 0) body.product.aspects = aspects
+  }
 
   return ebayApiRequest(`/sell/inventory/v1/inventory_item/${encodeURIComponent(sku)}`, accessToken, {
     method: 'PUT',
