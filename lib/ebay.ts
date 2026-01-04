@@ -52,6 +52,7 @@ export function getEbayAuthUrl(redirectUri: string, state?: string): string {
     'https://api.ebay.com/oauth/api_scope/sell.account', // Manage seller account settings (required by some account endpoints)
     'https://api.ebay.com/oauth/api_scope/sell.stores.readonly', // View eBay stores
     'https://api.ebay.com/oauth/api_scope/commerce.identity.readonly', // View user info
+    'https://api.ebay.com/oauth/api_scope/commerce.taxonomy.readonly', // Category suggestions / item aspects
   ].join(' ')
 
   const params = new URLSearchParams({
@@ -66,6 +67,44 @@ export function getEbayAuthUrl(redirectUri: string, state?: string): string {
   }
 
   return `${config.authUrl}?${params.toString()}`
+}
+
+/**
+ * Get the default category tree ID for a marketplace (Taxonomy API).
+ * Example: marketplaceId "EBAY_US" -> categoryTreeId
+ */
+export async function getDefaultCategoryTreeId(accessToken: string, marketplaceId: string) {
+  const resp = await ebayApiRequest(
+    `/commerce/taxonomy/v1/get_default_category_tree_id?marketplace_id=${encodeURIComponent(marketplaceId)}`,
+    accessToken,
+    { method: 'GET' }
+  )
+  const id = (resp as any)?.categoryTreeId
+  if (!id || typeof id !== 'string') throw new Error('Missing categoryTreeId from eBay taxonomy response')
+  return id
+}
+
+/**
+ * Suggest leaf-ish categories based on a query (usually title keywords).
+ * Returns an array of { categoryId, categoryName } sorted by eBay relevance.
+ */
+export async function getCategorySuggestions(accessToken: string, marketplaceId: string, query: string) {
+  const q = String(query || '').trim()
+  if (!q) return []
+  const treeId = await getDefaultCategoryTreeId(accessToken, marketplaceId)
+  const resp = await ebayApiRequest(
+    `/commerce/taxonomy/v1/category_tree/${encodeURIComponent(treeId)}/get_category_suggestions?q=${encodeURIComponent(q)}`,
+    accessToken,
+    { method: 'GET' }
+  )
+  const suggestions = (resp as any)?.categorySuggestions
+  if (!Array.isArray(suggestions)) return []
+  return suggestions
+    .map((s: any) => ({
+      categoryId: String(s?.category?.categoryId || '').trim(),
+      categoryName: String(s?.category?.categoryName || '').trim(),
+    }))
+    .filter((c: any) => c.categoryId && c.categoryName)
 }
 
 /**

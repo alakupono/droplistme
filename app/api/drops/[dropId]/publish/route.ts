@@ -9,6 +9,7 @@ import {
   createEbayOffer,
   publishEbayOffer,
   getEbayPolicies,
+  getCategorySuggestions,
 } from "@/lib/ebay";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,23 @@ function baseUrl(): string {
   if (appUrl && typeof appUrl === "string" && appUrl.trim()) return appUrl.trim().replace(/\/$/, "");
   // production fallback
   return "https://www.droplist.me";
+}
+
+function parseEbayErrorFromMessage(msg: string): { errorId?: number; message?: string } | null {
+  if (!msg || typeof msg !== "string") return null;
+  const idx = msg.indexOf(":");
+  if (idx < 0) return null;
+  const maybeJson = msg.slice(idx + 1).trim();
+  try {
+    const parsed = JSON.parse(maybeJson);
+    const first = Array.isArray(parsed?.errors) ? parsed.errors[0] : null;
+    return {
+      errorId: typeof first?.errorId === "number" ? first.errorId : undefined,
+      message: typeof first?.message === "string" ? first.message : undefined,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function POST(_req: Request, { params }: { params: Promise<{ dropId: string }> }) {
@@ -158,15 +176,81 @@ export async function POST(_req: Request, { params }: { params: Promise<{ dropId
     if (!offerId) throw new Error(`eBay did not return offerId. Response: ${JSON.stringify(offerResp)}`);
 
     // 3) Publish
-    const publishResp = await publishEbayOffer(accessToken, offerId);
+    let finalOfferId = offerId;
+    let publishResp: any;
+    try {
+      publishResp = await publishEbayOffer(accessToken, offerId);
+    } catch (e: any) {
+      const parsed = parseEbayErrorFromMessage(String(e?.message || ""));
+      // 25005: invalid category ID / not valid for listing; pick a valid suggestion and retry with a new offer.
+      if (parsed?.errorId === 25005) {
+        let suggestions: Array<{ categoryId: string; categoryName: string }> = [];
+        try {
+          suggestions = await getCategorySuggestions(accessToken, marketplaceId, title);
+        } catch (taxErr: any) {
+          return NextResponse.json(
+            {
+              error:
+                "eBay rejected the categoryId as invalid. To auto-fix, reconnect eBay with taxonomy scope and retry.",
+              ebayError: parsed,
+              hint:
+                "Re-connect eBay from /stores/new (we now request commerce.taxonomy.readonly). Then retry Publish.",
+            },
+            { status: 400 }
+          );
+        }
+
+        const suggestedCategoryId = suggestions?.[0]?.categoryId || null;
+        if (!suggestedCategoryId || suggestedCategoryId === categoryId) {
+          return NextResponse.json(
+            {
+              error:
+                "eBay rejected the categoryId as invalid. Select another leaf category and try again.",
+              ebayError: parsed,
+              suggestions,
+            },
+            { status: 400 }
+          );
+        }
+
+        // Persist the better category on the drop so future publishes use it.
+        await db.dropListing.update({
+          where: { id: drop.id },
+          data: { categoryId: suggestedCategoryId },
+        });
+
+        const offerResp2 = await createEbayOffer(accessToken, {
+          sku,
+          marketplaceId,
+          merchantLocationKey: store.merchantLocationKey,
+          categoryId: suggestedCategoryId,
+          title,
+          description,
+          priceValue,
+          currency: "USD",
+          quantity,
+          paymentPolicyId,
+          fulfillmentPolicyId,
+          returnPolicyId,
+        });
+        const offerId2 = (offerResp2 as any)?.offerId as string | undefined;
+        if (!offerId2) throw new Error(`eBay did not return offerId (retry). Response: ${JSON.stringify(offerResp2)}`);
+
+        finalOfferId = offerId2;
+        publishResp = await publishEbayOffer(accessToken, offerId2);
+      } else {
+        throw e;
+      }
+    }
+
     const ebayListingId = (publishResp as any)?.listingId || null;
 
     const now = new Date();
     const listing = await db.listing.upsert({
-      where: { ebayOfferId: offerId },
+      where: { ebayOfferId: finalOfferId },
       create: {
         storeId: store.id,
-        ebayOfferId: offerId,
+        ebayOfferId: finalOfferId,
         ebayListingId,
         sku,
         title,
@@ -175,7 +259,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ dropId
         quantity,
         status: "active",
         marketplaceId,
-        categoryId,
+        categoryId: (drop.categoryId as any) || categoryId,
         condition,
         images: imageUrls,
         listedAt: now,
@@ -189,7 +273,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ dropId
         quantity,
         status: "active",
         marketplaceId,
-        categoryId,
+        categoryId: (drop.categoryId as any) || categoryId,
         condition,
         images: imageUrls,
         listedAt: now,
@@ -204,7 +288,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ dropId
       },
     });
 
-    return NextResponse.json({ ok: true, listingId: listing.id, ebayOfferId: offerId, ebayListingId }, { status: 200 });
+    return NextResponse.json({ ok: true, listingId: listing.id, ebayOfferId: finalOfferId, ebayListingId }, { status: 200 });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "Publish failed" }, { status: 500 });
   }
