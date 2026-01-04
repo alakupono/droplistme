@@ -465,6 +465,18 @@ export async function createEbayOffer(
     returnPolicyId: string
   }
 ) {
+  // eBay expects `listingDescription` to be a STRING (typically HTML), not an object.
+  // Also strip problematic control chars that can break upstream serialization.
+  const sanitizeListingDescription = (input: unknown): string => {
+    const raw = typeof input === 'string' ? input : ''
+    const withoutNulls = raw.replace(/\u0000/g, '')
+    // Remove other C0 control chars except common whitespace (\t \n \r)
+    const withoutCtl = withoutNulls.replace(/[\u0001-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+    const trimmed = withoutCtl.trim()
+    // Keep this conservative to avoid upstream limits; user can refine later.
+    return trimmed.length > 80000 ? trimmed.slice(0, 80000) : trimmed
+  }
+
   const body: any = {
     sku: payload.sku,
     marketplaceId: payload.marketplaceId,
@@ -483,12 +495,13 @@ export async function createEbayOffer(
         currency: payload.currency,
       },
     },
-    listingDescription: {
-      title: payload.title,
-    },
+    // Title comes from the Inventory Item's `product.title`.
+    listingDescription: sanitizeListingDescription(
+      payload.description && payload.description.trim().length > 0
+        ? payload.description
+        : `See photos for details.\n\nTitle: ${payload.title}`
+    ),
   }
-
-  if (payload.description) body.listingDescription.description = payload.description
 
   return ebayApiRequest('/sell/inventory/v1/offer', accessToken, {
     method: 'POST',
