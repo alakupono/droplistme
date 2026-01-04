@@ -274,37 +274,56 @@ export async function ebayApiRequest(
   const config = getEbayConfig()
   const url = `${config.apiUrl}${endpoint}`
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      ...options.headers,
-      // Some eBay APIs validate language headers strictly; set safe defaults.
-      // Keep these AFTER spreading options.headers so we override any bad values.
-      'Accept-Language': 'en-US',
-      'Content-Language': 'en-US',
-    },
-  })
+  const maxRetries = 2
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...options.headers,
+        // Some eBay APIs validate language headers strictly; set safe defaults.
+        // Keep these AFTER spreading options.headers so we override any bad values.
+        'Accept-Language': 'en-US',
+        'Content-Language': 'en-US',
+      },
+    })
 
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => '')
-    throw new Error(
-      `eBay API request failed (HTTP ${response.status}) ${endpoint}: ${errorText}`
-    )
+    const correlationId =
+      response.headers.get('x-ebay-correlation-id') ||
+      response.headers.get('x-ebay-request-id') ||
+      response.headers.get('x-request-id') ||
+      null
+
+    // Retry transient upstream errors (Inventory service occasionally returns 5xx).
+    if (!response.ok && response.status >= 500 && response.status <= 504 && attempt < maxRetries) {
+      const backoffMs = 250 * Math.pow(2, attempt) // 250ms, 500ms, 1000ms...
+      await new Promise<void>((r) => setTimeout(r, backoffMs))
+      continue
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '')
+      throw new Error(
+        `eBay API request failed (HTTP ${response.status}) ${endpoint}${correlationId ? ` [correlationId=${correlationId}]` : ''}: ${errorText}`
+      )
+    }
+
+    // Some eBay endpoints return 204 No Content, or 200/201 with an empty body.
+    if (response.status === 204) return null
+    const text = await response.text().catch(() => '')
+    if (!text) return null
+    try {
+      return JSON.parse(text)
+    } catch {
+      // If eBay returns a non-JSON success payload, surface raw text.
+      return { raw: text }
+    }
   }
 
-  // Some eBay endpoints return 204 No Content, or 200/201 with an empty body.
-  if (response.status === 204) return null
-  const text = await response.text().catch(() => '')
-  if (!text) return null
-  try {
-    return JSON.parse(text)
-  } catch {
-    // If eBay returns a non-JSON success payload, surface raw text.
-    return { raw: text }
-  }
+  // Should be unreachable.
+  throw new Error(`eBay API request failed: exhausted retries for ${endpoint}`)
 }
 
 /**
