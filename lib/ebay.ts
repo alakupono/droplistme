@@ -280,6 +280,8 @@ export async function ebayApiRequest(
       'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      // Some eBay APIs validate Accept-Language strictly; set a safe default.
+      'Accept-Language': 'en-US',
       ...options.headers,
     },
   })
