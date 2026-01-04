@@ -35,9 +35,26 @@ export async function POST(_req: Request, { params }: { params: Promise<{ dropId
 
     const store = drop.store;
     if (!store.ebayAccessToken) return NextResponse.json({ error: "eBay not connected" }, { status: 400 });
-    if (!store.merchantLocationKey) return NextResponse.json({ error: "Missing merchantLocationKey" }, { status: 400 });
+    if (!store.merchantLocationKey) {
+      return NextResponse.json(
+        { error: "Missing merchantLocationKey", storeDefaults: { merchantLocationKey: store.merchantLocationKey } },
+        { status: 400 }
+      );
+    }
     if (!store.paymentPolicyId || !store.fulfillmentPolicyId || !store.returnPolicyId) {
-      return NextResponse.json({ error: "Missing eBay policy IDs (payment/fulfillment/return)" }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "Missing eBay policy IDs (payment/fulfillment/return). Save them from /api/ebay/diagnostics.",
+          storeDefaults: {
+            paymentPolicyId: store.paymentPolicyId,
+            fulfillmentPolicyId: store.fulfillmentPolicyId,
+            returnPolicyId: store.returnPolicyId,
+            merchantLocationKey: store.merchantLocationKey,
+            marketplaceId: store.marketplaceId,
+          },
+        },
+        { status: 400 }
+      );
     }
 
     const title = requireString(drop.title, "title");

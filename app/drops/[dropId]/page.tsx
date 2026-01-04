@@ -80,6 +80,13 @@ export default async function DropDetailPage({ params }: PageProps) {
             imagesCount: drop.images.length,
             publishedListingId: drop.publishedListingId,
             specifics: (drop as any).specifics ?? null,
+            storeDefaults: {
+              marketplaceId: drop.store.marketplaceId,
+              merchantLocationKey: drop.store.merchantLocationKey,
+              paymentPolicyId: drop.store.paymentPolicyId,
+              fulfillmentPolicyId: drop.store.fulfillmentPolicyId,
+              returnPolicyId: drop.store.returnPolicyId,
+            },
           }}
         />
 
