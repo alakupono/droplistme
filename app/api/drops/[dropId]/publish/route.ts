@@ -191,10 +191,10 @@ export async function POST(_req: Request, { params }: { params: Promise<{ dropId
           return NextResponse.json(
             {
               error:
-                "eBay rejected the categoryId as invalid. To auto-fix, reconnect eBay with taxonomy scope and retry.",
+                "eBay rejected the categoryId as invalid and we couldn't fetch category suggestions. Please try again, or set a different eBay leaf category ID.",
               ebayError: parsed,
               hint:
-                "Re-connect eBay from /stores/new (we now request commerce.taxonomy.readonly). Then retry Publish.",
+                "If this keeps happening, paste the drop title here and I'll suggest a leaf category ID to try.",
             },
             { status: 400 }
           );

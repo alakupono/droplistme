@@ -21,6 +21,14 @@ export const EBAY_CONFIG = {
   },
 }
 
+function safeJsonParse(text: string): any | null {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return null
+  }
+}
+
 // Get eBay API configuration based on environment
 export function getEbayConfig() {
   const useSandbox = process.env.EBAY_ENVIRONMENT === 'sandbox' || !process.env.EBAY_ENVIRONMENT
@@ -52,7 +60,6 @@ export function getEbayAuthUrl(redirectUri: string, state?: string): string {
     'https://api.ebay.com/oauth/api_scope/sell.account', // Manage seller account settings (required by some account endpoints)
     'https://api.ebay.com/oauth/api_scope/sell.stores.readonly', // View eBay stores
     'https://api.ebay.com/oauth/api_scope/commerce.identity.readonly', // View user info
-    'https://api.ebay.com/oauth/api_scope/commerce.taxonomy.readonly', // Category suggestions / item aspects
   ].join(' ')
 
   const params = new URLSearchParams({
@@ -74,9 +81,10 @@ export function getEbayAuthUrl(redirectUri: string, state?: string): string {
  * Example: marketplaceId "EBAY_US" -> categoryTreeId
  */
 export async function getDefaultCategoryTreeId(accessToken: string, marketplaceId: string) {
+  const token = await getEbayAppAccessToken()
   const resp = await ebayApiRequest(
     `/commerce/taxonomy/v1/get_default_category_tree_id?marketplace_id=${encodeURIComponent(marketplaceId)}`,
-    accessToken,
+    token,
     { method: 'GET' }
   )
   const id = (resp as any)?.categoryTreeId
@@ -92,9 +100,10 @@ export async function getCategorySuggestions(accessToken: string, marketplaceId:
   const q = String(query || '').trim()
   if (!q) return []
   const treeId = await getDefaultCategoryTreeId(accessToken, marketplaceId)
+  const token = await getEbayAppAccessToken()
   const resp = await ebayApiRequest(
     `/commerce/taxonomy/v1/category_tree/${encodeURIComponent(treeId)}/get_category_suggestions?q=${encodeURIComponent(q)}`,
-    accessToken,
+    token,
     { method: 'GET' }
   )
   const suggestions = (resp as any)?.categorySuggestions
@@ -105,6 +114,53 @@ export async function getCategorySuggestions(accessToken: string, marketplaceId:
       categoryName: String(s?.category?.categoryName || '').trim(),
     }))
     .filter((c: any) => c.categoryId && c.categoryName)
+}
+
+let _ebayAppTokenCache:
+  | { accessToken: string; expiresAtMs: number }
+  | null = null
+
+/**
+ * App-level (client_credentials) OAuth token.
+ * Use this for non-user resources like Taxonomy API, so we don't need extra user scopes.
+ */
+export async function getEbayAppAccessToken(): Promise<string> {
+  const now = Date.now()
+  if (_ebayAppTokenCache && now < _ebayAppTokenCache.expiresAtMs - 60_000) {
+    return _ebayAppTokenCache.accessToken
+  }
+
+  const config = getEbayConfig()
+  const clientId = process.env.EBAY_CLIENT_ID
+  const clientSecret = process.env.EBAY_CLIENT_SECRET
+  if (!clientId || !clientSecret) throw new Error('EBAY_CLIENT_ID and EBAY_CLIENT_SECRET must be set')
+
+  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+  const resp = await fetch(config.tokenUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Basic ${credentials}`,
+    },
+    body: new URLSearchParams({
+      grant_type: 'client_credentials',
+      // Taxonomy endpoints accept app tokens; keep scope conservative & widely supported.
+      scope: 'https://api.ebay.com/oauth/api_scope',
+    }),
+  })
+
+  const text = await resp.text()
+  if (!resp.ok) throw new Error(`Failed to get eBay app token: ${text}`)
+  const json = safeJsonParse(text)
+  const token = json?.access_token
+  const expiresIn = typeof json?.expires_in === 'number' ? json.expires_in : 7200
+  if (!token || typeof token !== 'string') throw new Error(`eBay app token missing access_token: ${text}`)
+
+  _ebayAppTokenCache = {
+    accessToken: token,
+    expiresAtMs: Date.now() + expiresIn * 1000,
+  }
+  return token
 }
 
 /**
