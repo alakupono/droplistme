@@ -11,6 +11,25 @@ export function ListingActionsClient(props: { listingId: string; currentPrice?: 
   const [error, setError] = useState<string | null>(null);
   const [okMsg, setOkMsg] = useState<string | null>(null);
 
+  async function publish() {
+    setIsWorking(true);
+    setError(null);
+    setOkMsg(null);
+    try {
+      const res = await fetch(`/api/ebay/listings/${encodeURIComponent(props.listingId)}/publish`, {
+        method: "POST",
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || `Publish failed (${res.status})`);
+      setOkMsg("Published on eBay.");
+      router.refresh();
+    } catch (e: any) {
+      setError(e?.message || "Publish failed");
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
   async function update() {
     setIsWorking(true);
     setError(null);
@@ -66,6 +85,9 @@ export function ListingActionsClient(props: { listingId: string; currentPrice?: 
       </div>
 
       <div style={{ marginTop: 12, display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <button className="btn btn-primary" onClick={publish} disabled={isWorking}>
+          {isWorking ? "Working…" : "Publish Offer"}
+        </button>
         <button className="btn btn-primary" onClick={update} disabled={isWorking}>
           {isWorking ? "Working…" : "Update on eBay"}
         </button>

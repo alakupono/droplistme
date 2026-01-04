@@ -90,6 +90,9 @@ export async function POST(req: NextRequest) {
     const title = o.listingDescription?.title || o.listingDescription?.description || o.title || "Untitled";
     const description = o.listingDescription?.description || null;
     const marketplaceId = o.marketplaceId || null;
+    const ebayListingId = o.listingId || o.listing?.listingId || null;
+    const categoryId = o.categoryId || null;
+    const condition = o.condition || null;
     const quantity = typeof o.availableQuantity === "number" ? o.availableQuantity : 1;
     const status = (o.status || o.offerStatus || "active").toString().toLowerCase();
     const priceStr =
@@ -105,22 +108,28 @@ export async function POST(req: NextRequest) {
         ebayOfferId,
         sku,
         ebayItemId: null,
+        ebayListingId,
         title,
         description,
         price: priceStr ? (priceStr as any) : null,
         quantity,
         status,
         marketplaceId,
+        categoryId,
+        condition,
         images: [],
       },
       update: {
         sku,
+        ebayListingId,
         title,
         description,
         price: priceStr ? (priceStr as any) : null,
         quantity,
         status,
         marketplaceId,
+        categoryId,
+        condition,
       },
     });
 
