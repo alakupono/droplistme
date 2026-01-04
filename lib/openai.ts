@@ -51,14 +51,21 @@ export async function analyzeDropImages(images: string[]): Promise<DropDraft> {
     'You will be given 1-8 photos of the item.',
     'Extract any readable text (labels, stickers, measurements) and infer the item details.',
     'Generate a complete draft listing for eBay US marketplace.',
+    'Focus on smart SEO: maximize search coverage while staying human, accurate, and not spammy.',
+    'TITLE RULES (hard): <= 80 characters; no ALL CAPS; no emojis; no repeated keywords; no misleading terms.',
+    'TITLE STRATEGY: start with the mineral name, then key descriptors (form/cut, color, grade), then size/weight if visible, then locality if known.',
+    'Avoid fluff words like "WOW", "RARE" unless clearly supported by the photos.',
+    'DESCRIPTION RULES: output HTML string (no markdown). Lead with a 1-2 sentence summary, then a short bullet list of key facts, then a short shipping/handling note.',
+    'DESCRIPTION MUST include: what it is, condition, what’s included, measurements if visible, and a gentle call to action.',
+    'If any critical info is unknown (weight, exact mineral ID, treatments), add a note in notes[] and phrase the description to be honest (e.g., "approximate" / "see photos").',
     'Return STRICT JSON ONLY matching the schema, no markdown, no commentary.',
     'If you cannot infer a field, put a reasonable default and add a note explaining what the user must confirm.',
     `Prefer categoryId "${defaultCategoryId}" unless the photos strongly indicate a different rocks/minerals category.`,
   ].join('\n')
 
   const schemaHint = {
-    title: 'string',
-    description: 'string',
+    title: 'string (SEO title, <= 80 chars)',
+    description: 'string (HTML)',
     categoryId: 'string',
     condition: 'NEW|USED_EXCELLENT|USED_VERY_GOOD|USED_GOOD|USED_ACCEPTABLE',
     price: 'string decimal like "12.99" (best guess; if unknown use "9.99" and add note)',
