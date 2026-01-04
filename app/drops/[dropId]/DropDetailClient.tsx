@@ -52,6 +52,20 @@ export function DropDetailClient(props: {
   const [returnPolicyId, setReturnPolicyId] = useState(props.initial.storeDefaults?.returnPolicyId || "");
   const merchantLocationKey = props.initial.storeDefaults?.merchantLocationKey || "";
 
+  const [policyOptions, setPolicyOptions] = useState<{
+    loading: boolean;
+    error: string | null;
+    paymentPolicies: Array<{ paymentPolicyId: string; name?: string }>;
+    fulfillmentPolicies: Array<{ fulfillmentPolicyId: string; name?: string }>;
+    returnPolicies: Array<{ returnPolicyId: string; name?: string }>;
+  }>({
+    loading: false,
+    error: null,
+    paymentPolicies: [],
+    fulfillmentPolicies: [],
+    returnPolicies: [],
+  });
+
   const [isWorking, setIsWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [okMsg, setOkMsg] = useState<string | null>(null);
@@ -150,6 +164,32 @@ export function DropDetailClient(props: {
     }
   }
 
+  async function loadPolicies() {
+    setPolicyOptions((p) => ({ ...p, loading: true, error: null }));
+    try {
+      const res = await fetch("/api/ebay/diagnostics", { method: "GET" });
+      const text = await res.text();
+      const json = (() => {
+        try {
+          return JSON.parse(text);
+        } catch {
+          return null;
+        }
+      })();
+      if (!res.ok) throw new Error((json as any)?.error || text || `Failed (${res.status})`);
+      const policies = (json as any)?.policies || {};
+      setPolicyOptions({
+        loading: false,
+        error: null,
+        paymentPolicies: Array.isArray(policies.paymentPolicies) ? policies.paymentPolicies : [],
+        fulfillmentPolicies: Array.isArray(policies.fulfillmentPolicies) ? policies.fulfillmentPolicies : [],
+        returnPolicies: Array.isArray(policies.returnPolicies) ? policies.returnPolicies : [],
+      });
+    } catch (e: any) {
+      setPolicyOptions((p) => ({ ...p, loading: false, error: e?.message || "Failed to load policies" }));
+    }
+  }
+
   return (
     <div className="admin-card">
       <h2>Draft</h2>
@@ -161,6 +201,12 @@ export function DropDetailClient(props: {
             Your eBay account has policies, but Droplist needs the 3 policy IDs saved to your Store once.
             Paste them from <code>/api/ebay/diagnostics</code>.
           </p>
+          <div style={{ marginTop: 10, display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <button className="btn btn-secondary" type="button" onClick={loadPolicies} disabled={policyOptions.loading}>
+              {policyOptions.loading ? "Loading…" : "Load policies (dropdowns)"}
+            </button>
+            {policyOptions.error && <span style={{ color: "#dc3545" }}>{policyOptions.error}</span>}
+          </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 10 }}>
             <label>
               <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>Marketplace</div>
@@ -172,15 +218,48 @@ export function DropDetailClient(props: {
             </label>
             <label>
               <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>paymentPolicyId</div>
-              <input className="input" value={paymentPolicyId} onChange={(e) => setPaymentPolicyId(e.target.value)} />
+              {policyOptions.paymentPolicies.length > 0 ? (
+                <select className="input" value={paymentPolicyId} onChange={(e) => setPaymentPolicyId(e.target.value)}>
+                  <option value="">Select…</option>
+                  {policyOptions.paymentPolicies.map((p) => (
+                    <option key={p.paymentPolicyId} value={p.paymentPolicyId}>
+                      {(p.name || "Payment Policy")} — {p.paymentPolicyId}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input className="input" value={paymentPolicyId} onChange={(e) => setPaymentPolicyId(e.target.value)} />
+              )}
             </label>
             <label>
               <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>fulfillmentPolicyId</div>
-              <input className="input" value={fulfillmentPolicyId} onChange={(e) => setFulfillmentPolicyId(e.target.value)} />
+              {policyOptions.fulfillmentPolicies.length > 0 ? (
+                <select className="input" value={fulfillmentPolicyId} onChange={(e) => setFulfillmentPolicyId(e.target.value)}>
+                  <option value="">Select…</option>
+                  {policyOptions.fulfillmentPolicies.map((p) => (
+                    <option key={p.fulfillmentPolicyId} value={p.fulfillmentPolicyId}>
+                      {(p.name || "Fulfillment Policy")} — {p.fulfillmentPolicyId}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input className="input" value={fulfillmentPolicyId} onChange={(e) => setFulfillmentPolicyId(e.target.value)} />
+              )}
             </label>
             <label>
               <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>returnPolicyId</div>
-              <input className="input" value={returnPolicyId} onChange={(e) => setReturnPolicyId(e.target.value)} />
+              {policyOptions.returnPolicies.length > 0 ? (
+                <select className="input" value={returnPolicyId} onChange={(e) => setReturnPolicyId(e.target.value)}>
+                  <option value="">Select…</option>
+                  {policyOptions.returnPolicies.map((p) => (
+                    <option key={p.returnPolicyId} value={p.returnPolicyId}>
+                      {(p.name || "Return Policy")} — {p.returnPolicyId}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input className="input" value={returnPolicyId} onChange={(e) => setReturnPolicyId(e.target.value)} />
+              )}
             </label>
           </div>
           <div style={{ marginTop: 12 }}>
