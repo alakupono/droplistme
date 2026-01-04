@@ -38,6 +38,12 @@ export default async function ListingDetailPage({ params }: PageProps) {
     );
   }
 
+  const marketplace = listing.marketplaceId || listing.store.marketplaceId || "EBAY_US";
+  const ebayBase =
+    marketplace === "EBAY_GB" ? "https://www.ebay.co.uk" :
+    marketplace === "EBAY_CA" ? "https://www.ebay.ca" :
+    "https://www.ebay.com";
+
   return (
     <div className="profile-container">
       <div className="profile-header">
@@ -48,6 +54,17 @@ export default async function ListingDetailPage({ params }: PageProps) {
           </p>
         </div>
         <div className="admin-actions">
+          {listing.ebayListingId && (
+            <a
+              href={`${ebayBase}/itm/${encodeURIComponent(listing.ebayListingId)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary"
+              style={{ textDecoration: "none" }}
+            >
+              View on eBay
+            </a>
+          )}
           <Link href="/listings" className="btn btn-secondary" style={{ textDecoration: "none" }}>
             Back
           </Link>

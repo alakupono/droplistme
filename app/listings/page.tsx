@@ -15,9 +15,11 @@ export default async function ListingsPage() {
   const user = await getOrCreateUser();
   if (!user) redirect("/");
 
+  // Prefer the most recently updated *connected* store (reconnects update tokens).
+  // This prevents "empty listings" when a user has multiple store rows.
   const store = await db.store.findFirst({
-    where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
+    where: { userId: user.id, ebayAccessToken: { not: null } },
+    orderBy: { updatedAt: "desc" },
   });
 
   if (!store || !store.ebayAccessToken) {
@@ -49,8 +51,16 @@ export default async function ListingsPage() {
     );
   }
 
+  const marketplace = store.marketplaceId || "EBAY_US";
+  const ebayBase =
+    marketplace === "EBAY_GB" ? "https://www.ebay.co.uk" :
+    marketplace === "EBAY_CA" ? "https://www.ebay.ca" :
+    "https://www.ebay.com";
+
   const listings = await db.listing.findMany({
-    where: { storeId: store.id },
+    // Show all listings across all of this user's stores (single-account UX).
+    where: { store: { userId: user.id } },
+    include: { store: true },
     orderBy: { updatedAt: "desc" },
     take: 200,
   });
@@ -96,6 +106,7 @@ export default async function ListingsPage() {
                 <thead>
                   <tr>
                     <th>Title</th>
+                    <th>eBay</th>
                     <th>Status</th>
                     <th>Price</th>
                     <th>Qty</th>
@@ -110,6 +121,25 @@ export default async function ListingsPage() {
                           <strong style={{ color: "#111" }}>{l.title}</strong>
                         </Link>
                         {l.sku && <div style={{ fontSize: 12, color: "#999" }}>SKU: {l.sku}</div>}
+                        <div style={{ fontSize: 12, color: "#999" }}>
+                          Store: {l.store?.ebayUsername || l.store?.ebayStoreName || "eBay account"}
+                        </div>
+                      </td>
+                      <td>
+                        {l.ebayListingId ? (
+                          <a
+                            href={`${ebayBase}/itm/${encodeURIComponent(l.ebayListingId)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ textDecoration: "none" }}
+                          >
+                            View
+                          </a>
+                        ) : l.ebayOfferId ? (
+                          <span style={{ color: "#999" }}>Offer {String(l.ebayOfferId)}</span>
+                        ) : (
+                          <span style={{ color: "#999" }}>-</span>
+                        )}
                       </td>
                       <td>{l.status}</td>
                       <td>{l.price ? String(l.price) : "-"}</td>
