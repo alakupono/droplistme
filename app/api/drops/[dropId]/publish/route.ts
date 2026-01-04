@@ -27,7 +27,7 @@ function baseUrl(): string {
   return "https://www.droplist.me";
 }
 
-function parseEbayErrorFromMessage(msg: string): { errorId?: number; message?: string } | null {
+function parseEbayErrorFromMessage(msg: string): { errorId?: number; message?: string; parameters?: Record<string, string> } | null {
   if (!msg || typeof msg !== "string") return null;
   const idx = msg.indexOf(":");
   if (idx < 0) return null;
@@ -35,9 +35,17 @@ function parseEbayErrorFromMessage(msg: string): { errorId?: number; message?: s
   try {
     const parsed = JSON.parse(maybeJson);
     const first = Array.isArray(parsed?.errors) ? parsed.errors[0] : null;
+    const paramsArr = Array.isArray(first?.parameters) ? first.parameters : [];
+    const parameters: Record<string, string> = {};
+    for (const p of paramsArr) {
+      const name = typeof p?.name === "string" ? p.name : null;
+      const value = p?.value;
+      if (name) parameters[name] = typeof value === "string" ? value : String(value ?? "");
+    }
     return {
       errorId: typeof first?.errorId === "number" ? first.errorId : undefined,
       message: typeof first?.message === "string" ? first.message : undefined,
+      parameters,
     };
   } catch {
     return null;
@@ -156,24 +164,42 @@ export async function POST(_req: Request, { params }: { params: Promise<{ dropId
       aspects,
     });
 
-    // 2) Offer
-    const offerResp = await createEbayOffer(accessToken, {
-      sku,
-      marketplaceId,
-      merchantLocationKey: store.merchantLocationKey,
-      categoryId,
-      title,
-      description,
-      priceValue,
-      currency: "USD",
-      quantity,
-      paymentPolicyId,
-      fulfillmentPolicyId,
-      returnPolicyId,
-    });
-
-    const offerId = (offerResp as any)?.offerId as string | undefined;
-    if (!offerId) throw new Error(`eBay did not return offerId. Response: ${JSON.stringify(offerResp)}`);
+    // 2) Offer (idempotent)
+    let offerResp: any;
+    let offerId: string | undefined;
+    try {
+      offerResp = await createEbayOffer(accessToken, {
+        sku,
+        marketplaceId,
+        merchantLocationKey: store.merchantLocationKey,
+        categoryId,
+        title,
+        description,
+        priceValue,
+        currency: "USD",
+        quantity,
+        paymentPolicyId,
+        fulfillmentPolicyId,
+        returnPolicyId,
+      });
+      offerId = (offerResp as any)?.offerId as string | undefined;
+      if (!offerId) throw new Error(`eBay did not return offerId. Response: ${JSON.stringify(offerResp)}`);
+    } catch (e: any) {
+      const parsed = parseEbayErrorFromMessage(String(e?.message || ""));
+      // 25002: offer entity already exists; eBay returns offerId in parameters.
+      if (parsed?.errorId === 25002) {
+        const existingOfferId = parsed.parameters?.offerId;
+        if (existingOfferId && typeof existingOfferId === "string" && existingOfferId.trim().length > 0) {
+          offerId = existingOfferId.trim();
+        } else {
+          throw new Error(
+            `eBay says offer already exists but did not provide offerId. Details: ${String(e?.message || e)}`
+          );
+        }
+      } else {
+        throw e;
+      }
+    }
 
     // 3) Publish
     let finalOfferId = offerId;
