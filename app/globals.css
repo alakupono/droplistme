@@ -24,6 +24,122 @@ body {
   padding: 20px;
 }
 
+/* ---------- Drops: dark, modern "glass" theme (scoped via .glass-shell) ---------- */
+.glass-shell {
+  width: 100%;
+  min-height: 100vh;
+  align-self: stretch;
+  justify-self: stretch;
+  padding: 44px 20px;
+  border-radius: 24px;
+  background:
+    radial-gradient(1200px 600px at 10% 10%, rgba(116, 95, 250, 0.35), transparent 55%),
+    radial-gradient(900px 520px at 90% 20%, rgba(0, 224, 255, 0.22), transparent 55%),
+    radial-gradient(1000px 700px at 50% 95%, rgba(255, 0, 122, 0.12), transparent 55%),
+    linear-gradient(180deg, rgba(10, 10, 16, 0.94), rgba(8, 9, 14, 0.94));
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+.glass-shell h1,
+.glass-shell h2,
+.glass-shell h3,
+.glass-shell p,
+.glass-shell td,
+.glass-shell th,
+.glass-shell label,
+.glass-shell div {
+  color: rgba(240, 243, 255, 0.92);
+}
+
+.glass-shell .profile-header p,
+.glass-shell .admin-header p,
+.glass-shell .empty-message {
+  color: rgba(240, 243, 255, 0.70);
+}
+
+.glass-shell .admin-card,
+.glass-shell .profile-card,
+.glass-shell .content {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px) saturate(130%);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+}
+
+.glass-shell .admin-card h2,
+.glass-shell .profile-card h2 {
+  color: rgba(245, 247, 255, 0.96);
+}
+
+.glass-shell .btn {
+  border-radius: 12px;
+}
+
+.glass-shell .btn-primary {
+  background:
+    linear-gradient(135deg, rgba(116, 95, 250, 0.95), rgba(0, 224, 255, 0.75));
+  box-shadow:
+    0 10px 24px rgba(0, 224, 255, 0.14),
+    0 14px 40px rgba(116, 95, 250, 0.18);
+}
+
+.glass-shell .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 28px rgba(0, 224, 255, 0.20),
+    0 16px 48px rgba(116, 95, 250, 0.24);
+}
+
+.glass-shell .btn-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(240, 243, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+}
+
+.glass-shell .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.96);
+  transform: translateY(-2px);
+}
+
+.glass-shell .input {
+  background: rgba(10, 12, 18, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(245, 247, 255, 0.96);
+}
+
+.glass-shell .input::placeholder {
+  color: rgba(240, 243, 255, 0.45);
+}
+
+.glass-shell .input:focus {
+  border-color: rgba(0, 224, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(0, 224, 255, 0.14);
+}
+
+.glass-shell .admin-table th {
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(245, 247, 255, 0.90);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.glass-shell .admin-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(240, 243, 255, 0.80);
+}
+
+.glass-shell .admin-table tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
 .container {
   width: 100%;
   max-width: 600px;

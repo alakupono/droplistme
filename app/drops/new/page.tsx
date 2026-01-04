@@ -15,7 +15,7 @@ export default async function NewDropPage() {
   if (!user) redirect("/");
 
   return (
-    <div className="profile-container">
+    <div className="profile-container glass-shell">
       <div className="profile-header">
         <div>
           <h1>New Drop Listing</h1>

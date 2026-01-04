@@ -26,7 +26,7 @@ export default async function DropDetailPage({ params }: PageProps) {
   });
   if (!drop) {
     return (
-      <div className="profile-container">
+      <div className="profile-container glass-shell">
         <div className="admin-card">
           <h1>Drop not found</h1>
           <Link href="/drops" className="btn btn-primary" style={{ marginTop: 16, display: "inline-block" }}>
@@ -38,7 +38,7 @@ export default async function DropDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="profile-container">
+    <div className="profile-container glass-shell">
       <div className="profile-header">
         <div>
           <h1>Drop Listing</h1>

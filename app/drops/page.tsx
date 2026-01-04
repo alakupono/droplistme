@@ -20,7 +20,7 @@ export default async function DropsPage() {
   });
   if (!store) {
     return (
-      <div className="profile-container">
+      <div className="profile-container glass-shell">
         <div className="admin-card">
           <h1>Drop Listings</h1>
           <p style={{ color: "#666", marginTop: 8 }}>Connect eBay first.</p>
@@ -39,7 +39,7 @@ export default async function DropsPage() {
   });
 
   return (
-    <div className="profile-container">
+    <div className="profile-container glass-shell">
       <div className="profile-header">
         <div>
           <h1>Drop Listings</h1>
