@@ -6,6 +6,7 @@ import { getOrCreateUser } from "@/lib/auth";
 import { getValidEbayToken, refreshEbayToken, getEbayPolicies, getEbayInventoryLocations } from "@/lib/ebay";
 import { ManualListingClient } from "./ManualListingClient";
 import { BusinessPoliciesOptInClient } from "./BusinessPoliciesOptInClient";
+import { WarehouseLocationClient } from "./WarehouseLocationClient";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -116,6 +117,16 @@ export default async function NewListingPage() {
             <div><strong>Return policies:</strong> {policies.returnPolicies.length}</div>
             <div><strong>Inventory locations:</strong> {locations.length}</div>
           </div>
+
+          {locations.length === 0 && (
+            <div style={{ marginTop: 16 }}>
+              <h3 style={{ marginTop: 0 }}>Warehouse Location</h3>
+              <p style={{ color: "#666", marginTop: 8 }}>
+                You need at least one inventory location (merchantLocationKey). Create one now (recommended key: <code>DLME_WAREHOUSE_US</code>).
+              </p>
+              <WarehouseLocationClient defaultKey="DLME_WAREHOUSE_US" />
+            </div>
+          )}
           <div style={{ marginTop: 12 }}>
             <Link href="/api/ebay/diagnostics" className="btn btn-secondary" style={{ textDecoration: "none" }}>
               View raw diagnostics JSON
