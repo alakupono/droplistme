@@ -73,12 +73,12 @@ export async function analyzeDropImages(images: string[]): Promise<DropDraft> {
   const input: any[] = [
     {
       role: 'system',
-      content: [{ type: 'text', text: system }],
+      content: [{ type: 'input_text', text: system }],
     },
     {
       role: 'user',
       content: [
-        { type: 'text', text: `Return JSON with keys exactly like this schema: ${JSON.stringify(schemaHint)}` },
+        { type: 'input_text', text: `Return JSON with keys exactly like this schema: ${JSON.stringify(schemaHint)}` },
         ...images.slice(0, 8).map((dataUrl) => ({ type: 'input_image', image_url: dataUrl })),
       ],
     },
@@ -95,6 +95,8 @@ export async function analyzeDropImages(images: string[]): Promise<DropDraft> {
       input,
       temperature: 0.3,
       max_output_tokens: 900,
+      // Force JSON output (prevents markdown / prose responses)
+      text: { format: { type: 'json_object' } },
     }),
   })
 
